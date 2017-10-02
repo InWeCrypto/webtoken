@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>api</title>
+    <script src="https://cdn.bootcss.com/jquery/2.0.0/jquery.min.js"></script> <script>     /* 此处为了生成文档目录方便把JS文件写这里了~ */     $(function () {         var body = $('body');          /* 创建侧边目录栏 */         var directoryHtml = $('<div>');         directoryHtml.css({             position: 'fixed',             top: 0,             bottom: 0,             left: 0,             width: 300,             backgroundColor: '#FFF',             borderRight: '1px solid #CCC',             overflow: 'auto',             display: 'block'         });         body.prepend(directoryHtml);          /* 创建伸缩/展开侧边目录栏 */         var control = $('<div>'),             shrink = $('<span>'),             stretch = $('<span>');         control.css({             position: 'fixed',             top: -1,             left: 300,             padding: '6px 12px',             backgroundColor: '#FFF',             border: '1px solid #CCC',             cursor: 'pointer'         });         shrink.css({             display: 'inline-block',             verticalAlign: 'middle',             color: '#000',             borderTop: '8px solid transparent',             borderBottom: '8px solid transparent',             borderRight: '10px solid'         });         stretch.css({             display: 'inline-block',             verticalAlign: 'middle',             color: '#000',             borderTop: '8px solid transparent',             borderBottom: '8px solid transparent',             borderLeft: '10px solid'         });         control.prepend(shrink).data('shrink', false);         body.prepend(control).css('padding-left', 340);         control.click(function () {             if ($(this).data('shrink')) {                 directoryHtml.show();                 control.css('left', 300).html(shrink).data('shrink', false);                 body.css('padding-left', 340);             } else {                 directoryHtml.hide();                 control.css('left', -1).html(stretch).data('shrink', true);                 body.css('padding-left', 0);             }         });          var menuList = $('body').children(':header'),             menuObject = [],             headerObject = {                 h1: 0,                 h2: 0,                 h3: 0,                 h4: 0,                 h5: 0,                 h6: 0             },             headerParentObj = {                 h1: null,                 h2: 'h1',                 h3: 'h2',                 h4: 'h3',                 h5: 'h4',                 h6: 'h5'             },             previousTagName;         /* 为菜单创建锚点 */         menuList.each(function (index, element) {             var href = index ? $(element).html().split(' ')[0] : '0.',                 tagName = $(element)[0]['tagName'].toLowerCase();             menuObject[index] = {                 id: href,                 parentId: 0,                 name: $(element).html(),                 href: '#' + href             };             if (tagName === previousTagName) {                 menuObject[index]['parentId'] = headerObject[headerParentObj[previousTagName]];             } else if (headerParentObj[tagName] === previousTagName) {                 menuObject[index]['parentId'] = headerObject[previousTagName];             } else {                 menuObject[index]['parentId'] = headerObject[headerParentObj[tagName]] ? headerObject[headerParentObj[tagName]] : 0;             }             headerObject[tagName] = href;             previousTagName = tagName;             $(element).prepend('<a id="' + href + '"></a>');          });         /* 创建目录列表 */         var createMenuFunc = function (menuObject, parentId, directoryHtml) {             if (menuObject.length === 0) {                 return;             }             var childList = [];             for (var i in menuObject) {                 if (menuObject[i]['parentId'] === parentId) {                     childList.push(menuObject[i]);                 }             }             for (var i in childList) {                 var ul = $('<ul>'),                     li = $('<li>');                 ul.css({                     paddingLeft: 20                 });                 li.append('<a style="white-space:nowrap" href="' + childList[i]['href'] + '">' + childList[i]['name'] + '</a>');                 ul.append(li);                 directoryHtml.append(ul);                 createMenuFunc(menuObject, childList[i]['id'], li);             }         };         createMenuFunc(menuObject, 0, directoryHtml);      }); </script>
+
+
+<style type="text/css">
+body {
+  font-family: Helvetica, arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: white;
+  padding: 30px; }
+
+body > *:first-child {
+  margin-top: 0 !important; }
+body > *:last-child {
+  margin-bottom: 0 !important; }
+
+a {
+  color: #4183C4; }
+a.absent {
+  color: #cc0000; }
+a.anchor {
+  display: block;
+  padding-left: 30px;
+  margin-left: -30px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+  cursor: text;
+  position: relative; }
+
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA09pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoMTMuMCAyMDEyMDMwNS5tLjQxNSAyMDEyLzAzLzA1OjIxOjAwOjAwKSAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM2NjlDQjI4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM2NjlDQjM4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzY2OUNCMDg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzY2OUNCMTg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsQhXeAAAABfSURBVHjaYvz//z8DJYCRUgMYQAbAMBQIAvEqkBQWXI6sHqwHiwG70TTBxGaiWwjCTGgOUgJiF1J8wMRAIUA34B4Q76HUBelAfJYSA0CuMIEaRP8wGIkGMA54bgQIMACAmkXJi0hKJQAAAABJRU5ErkJggg==) no-repeat 10px center;
+  text-decoration: none; }
+
+h1 tt, h1 code {
+  font-size: inherit; }
+
+h2 tt, h2 code {
+  font-size: inherit; }
+
+h3 tt, h3 code {
+  font-size: inherit; }
+
+h4 tt, h4 code {
+  font-size: inherit; }
+
+h5 tt, h5 code {
+  font-size: inherit; }
+
+h6 tt, h6 code {
+  font-size: inherit; }
+
+h1 {
+  font-size: 28px;
+  color: black; }
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #cccccc;
+  color: black; }
+
+h3 {
+  font-size: 18px; }
+
+h4 {
+  font-size: 16px; }
+
+h5 {
+  font-size: 14px; }
+
+h6 {
+  color: #777777;
+  font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+  margin: 15px 0; }
+
+hr {
+  background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;
+  border: 0 none;
+  color: #cccccc;
+  height: 4px;
+  padding: 0;
+}
+
+body > h2:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+body > h1:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+  body > h1:first-child + h2 {
+    margin-top: 0;
+    padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0; }
+
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+  margin-top: 0; }
+
+li p.first {
+  display: inline-block; }
+li {
+  margin: 0; }
+ul, ol {
+  padding-left: 30px; }
+
+ul :first-child, ol :first-child {
+  margin-top: 0; }
+
+dl {
+  padding: 0; }
+  dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin: 15px 0 5px; }
+    dl dt:first-child {
+      padding: 0; }
+    dl dt > :first-child {
+      margin-top: 0; }
+    dl dt > :last-child {
+      margin-bottom: 0; }
+  dl dd {
+    margin: 0 0 15px;
+    padding: 0 15px; }
+    dl dd > :first-child {
+      margin-top: 0; }
+    dl dd > :last-child {
+      margin-bottom: 0; }
+
+blockquote {
+  border-left: 4px solid #dddddd;
+  padding: 0 15px;
+  color: #777777; }
+  blockquote > :first-child {
+    margin-top: 0; }
+  blockquote > :last-child {
+    margin-bottom: 0; }
+
+table {
+  padding: 0;border-collapse: collapse; }
+  table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0; }
+    table tr:nth-child(2n) {
+      background-color: #f8f8f8; }
+    table tr th {
+      font-weight: bold;
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr td {
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr th :first-child, table tr td :first-child {
+      margin-top: 0; }
+    table tr th :last-child, table tr td :last-child {
+      margin-bottom: 0; }
+
+img {
+  max-width: 100%; }
+
+span.frame {
+  display: block;
+  overflow: hidden; }
+  span.frame > span {
+    border: 1px solid #dddddd;
+    display: block;
+    float: left;
+    overflow: hidden;
+    margin: 13px 0 0;
+    padding: 7px;
+    width: auto; }
+  span.frame span img {
+    display: block;
+    float: left; }
+  span.frame span span {
+    clear: both;
+    color: #333333;
+    display: block;
+    padding: 5px 0 0; }
+span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-center > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: center; }
+  span.align-center span img {
+    margin: 0 auto;
+    text-align: center; }
+span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px 0 0;
+    text-align: right; }
+  span.align-right span img {
+    margin: 0;
+    text-align: right; }
+span.float-left {
+  display: block;
+  margin-right: 13px;
+  overflow: hidden;
+  float: left; }
+  span.float-left span {
+    margin: 13px 0 0; }
+span.float-right {
+  display: block;
+  margin-left: 13px;
+  overflow: hidden;
+  float: right; }
+  span.float-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: right; }
+
+code, tt {
+  margin: 0 2px;
+  padding: 0 5px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px; }
+
+pre code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent; }
+
+.highlight pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+  pre code, pre tt {
+    background-color: transparent;
+    border: none; }
+
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+
+kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 11px;
+  line-height: 10px;
+  color: #555;
+  vertical-align: middle;
+  background-color: #fcfcfc;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #bbb
+}
+
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:0 auto;
+    }
+}
+@media print {
+	table, pre {
+		page-break-inside: avoid;
+	}
+	pre {
+		word-wrap: break-word;
+	}
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h1 id="toc_0">API</h1>
+
+<h2 id="toc_1">1. API接口通信规定</h2>
+
+<ul>
+<li>接口采用 <strong>HTTPS</strong>, <strong>RESTFUL</strong> 协议</li>
+<li><p>请求返回数据格式</p>
+
+<h4 id="toc_2">所有数据返回都基于以下的 <strong>JSON</strong> 协议</h4>
+
+<blockquote>
+<p>失败时返回:</p>
+</blockquote>
+
+<div><pre><code class="language-none">{
+    &quot;code&quot;:请求结果编码,
+    &quot;msg&quot;:提示信息,
+    &quot;url&quot;:4007跳转目标路径,
+    &quot;data&quot;:返回信息正文
+}</code></pre></div></li>
+<li><p>备注:
+所有接口请求模块都是在&quot;api&quot;下,如登录:</p>
+
+<blockquote>
+<p>www.xxx.com(/index.php)/api/index/login</p>
+
+<p>&quot;字段说明&quot;和字段子集说明&quot;是两个概念,&quot;字段子集说明&quot;表示的是该字段下面是集合.</p>
+
+<p>除通用模块外,其他模块均需要传递登录返回的token字段.</p>
+</blockquote></li>
+</ul>
+
+<h3 id="toc_3">编码对照:</h3>
+
+<div><pre><code class="language-none">4000    请求执行成功
+4001    未登陆
+4002    无权限
+4003    路由不存在
+4004    验证不通过
+4005    查询数据不存在
+4006    请求执行失败
+4007    请求执行成功,即将跳转 
+4008    未注册
+4009    token过期</code></pre></div>
+
+<h2 id="toc_4">2.   接口详细说明</h2>
+
+<h3 id="toc_5">2.1(仅注册与登录接口不需要添加header ct)</h3>
+
+<h4 id="toc_6">2.1.1  注册与登录[post]    auth</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">登录:
+open_id         string
+
+注册:
+app_id              string          
+secret              string
+js_code         string
+grant_type      string</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">token               string          有效时间,2周,拼接在header里面,键名:ct
+user                array           当前用户信息
+
+user字段说明:
+
+    open_id     string
+    nickname        string          
+    sex             int             1男,2女
+    img             string          头像路径
+
+
+备注:其他需要返回的信息待定</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_7">2.1.2  文件上传[get]    upload</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">file            resource        文件资源</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">uri             string          文件保存地址,服务器相对路径
+url             string          绝对路径,可用于显示</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_8">2.1.3  钱包类型[get]    wallet-category</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">id              int                 钱包类型ID
+name            string              类型名称
+gas             stirng
+icon            string
+address     string              合约地址        </code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_9">2.1.5  用户添加钱包类型[post]    user-wallet</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">category_ids        json            钱包类型id</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_10">2.1.6  代币类型[get]    gnt-category</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">wallet_category_id      int         钱包类型ID
+wallet_id               int         钱包ID</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">id              int                 代币类型ID
+category_id     int             钱包类型ID
+name            string              代币名称
+gas             stirng
+icon            string
+address     string              合约地址        </code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_11">2.1.7  用户已添加代币类型列表[get]   user-gnt</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">wallet_category_id      int         钱包类型ID
+wallet_id                   int         钱包ID</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list            array
+
+list字段子集说明:
+
+    id              int                 用户代币类型ID
+    gnt_category_id     int             代币类型ID
+    name            string              代币名称        </code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_12">2.1.7_1  用户添加代币[post]   user-gnt</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">wallet_id       int         钱包ID
+gnt_category_ids    json    代币类型,如:[1,2,3]  </code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_13">2.1.8  用户置顶已添加代币类型[put]   user-gnt/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">用户代币类型ID</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_14">2.1.8  删除已添加代币类型[delete]   user-gnt/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">用户代币类型ID</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_15">2.1.9  发现[get]   find</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">banner          array           
+ico             array
+
+banner字段子集说明:
+
+    id          int         对应文章ID
+    detail      array       详情
+
+    detail字段说明:
+
+        title       string
+        img         string      
+        desc        string      简介
+
+ico字段子集说明:
+
+    id          int         
+    name        string
+    img         string          icon图标路径
+
+
+备注:文章列表因为涉及到分页,所以单独请求文章列表接口         </code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_16">2.1.10  文章列表[get]   article</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">page            int             页码,默认1
+per_page        int             每页显示条数,默认5</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list            array           
+
+list字段子集说明:
+
+    id          int         文章ID
+    detail      array       详情
+    created_at  string      发表时间
+
+    detail字段说明:
+
+        title       string
+        img         string      
+        desc        string      简介
+        content     string      文章内容</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_17">2.1.11  文章详情[get]   article/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">id          int         对应文章ID
+detail      array       详情
+created_at  string      发表时间
+
+detail字段说明:
+
+    title       string
+    img         string      
+    desc        string      简介
+    content     string      文章内容</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_18">2.1.12  通讯录列表[get]   contact</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list            array
+
+list字段子集说明:
+
+    id          int         联系人记录ID
+    category_id     int     对应钱包类型
+    name        string          名称
+    address     string          钱包地址
+    remark      string          备注
+    wallet      array       如果该钱包地址未关联到具体的钱包记录,则该值为null
+
+    wallet字段说明:
+
+        user    array       
+
+            img         string          联系人头像路径</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_19">2.1.13  添加通讯录[post]   contact</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">category_id     int         对应钱包类型
+name            string          名称
+address     string          钱包地址
+remark      string          备注(可选项)</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_20">2.1.14  通讯录详情[get]   contact/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">id          int         联系人记录ID
+category_id     int     对应钱包类型
+name        string          名称
+address     string          钱包地址
+remark      string          备注
+wallet      array       如果该钱包地址未关联到具体的钱包记录,则该值为null
+
+wallet字段说明:
+
+    user    array       
+
+        img         string          联系人头像路径</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_21">2.1.15  编辑通讯录信息[put]   contact/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">category_id     int         对应钱包类型
+name            string          名称
+address     string          钱包地址
+remark      string          备注(可选项)</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">id          int         联系人记录ID
+category_id     int     对应钱包类型
+name        string          名称
+address     string          钱包地址
+remark      string          备注
+wallet      array       如果该钱包地址未关联到具体的钱包记录,则该值为null
+
+wallet字段说明:
+
+    user    array       
+
+        img         string          联系人头像路径</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_22">2.1.16  删除通讯录[delete]   contact/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_23">2.1.17  添加钱包[post]   wallet</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">category_id         int             钱包类型ID
+name                    string          钱包名称
+address             string          钱包地址</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">record                  array           
+
+record字段说明:
+
+    id                  int             钱包id
+    category_id     int             钱包类型ID
+    name                string          钱包名称
+    address         string          钱包地址
+    created_at      string          创建时间</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_24">2.1.17_1  钱包列表[get]   wallet</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list                    array           
+
+list字段说明:
+
+    id                  int             钱包id
+    category_id     int             钱包类型ID
+    name                string          钱包名称
+    address         string          钱包地址
+    created_at      string          创建时间
+    category            array           钱包类型信息
+
+    category字段说明:
+
+        name            string          钱包类型</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_25">2.1.17_2  修改钱包名称[put]   wallet/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">name                    string          钱包名称</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_26">2.1.17_3  删除钱包[delete]   wallet/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_27">2.1.18  钱包订单[get]   wallet-order</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">wallet_id               int             钱包ID
+flag                    string          钱包/代币类型:如eth</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list                array
+
+list字段子集说明:
+
+    id              int                 订单ID
+    user_id     int                 付款人ID
+    wallet_id       int                 钱包ID
+    trade_no        string              交易单号
+    pay_address     string              付款地址
+    receive_address     stirng          收款地址
+    remark          string              备注
+    fee             string              交易金额
+    handle_fee      string              手续费
+    hash            strig
+    status          int                 0交易失败,1准备打包2打包中,3交易成功
+    flag            string          钱包/代币类型:如eth
+    finished_at     string          交易完成时间
+    created_at      string          订单创建时间</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_28">2.1.19  创建钱包订单[post]   wallet-order</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">wallet_id               int         钱包ID
+data                string          rawtransaction那个字符串
+pay_address     string              付款地址
+receive_address     stirng          收款地址
+remark          string              备注(可选参数)
+fee             string              交易金额
+handle_fee      string              手续费
+flag                string          钱包/代币类型:如eth</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_29">2.1.20  钱包订单详情[get]   wallet-order/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">id              int                 订单ID
+user_id     int                 付款人ID
+wallet_id       int                 钱包ID
+trade_no        string              交易单号
+pay_address     string              付款地址
+receive_address     stirng          收款地址
+remark          string              备注
+fee             string              交易金额
+handle_fee      string              手续费
+hash            strig
+status          int                 0失败,1打包中,2交易成功
+flag                    string          钱包/代币类型:如eth
+finished_at     string          交易完成时间
+created_at      string          订单创建时间</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_30">2.1.21  获取货币单位及用户选择情况[get]   monetary-unit</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list            array
+
+list字段子集说明:
+
+    id              int                 货币单位ID
+    name            string              货币单位名称
+    user_unit_count int                 0表示用户未选择,1表示用户已选择
+    created_at      string              创建时间    </code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_31">2.1.22  变更用户选择的货币单位[post]   monetary-unit</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">monetary_unit_id        int             货币单位ID      </code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_32">2.1.23  用户信息[get]   user/create</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">user            array
+
+user字段说明:
+
+    img         string              头像
+    nickname        string          昵称/名称
+    sex         int                 性别,1男,2女</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_33">2.1.23.1  修改用户信息[post]   user</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">nickname            string              用户名称
+img                 string              用户头像</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_34">2.1.24  用户已添加的行情分类列表[get]   market-category</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">is_all              int             可选参数,当传递该值得时候返回的是所有的行情分类列表</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list                array
+
+list字段子集说明:
+
+    id          int             行情分类ID
+    name        string          网站名称
+    flag        string          行情标记,用于显示以及关联行情实时数据
+    token       string          网站token
+    url         string          网站url
+    relation_user_count int     0表示没选择,1表示已选择
+    created_at  string          创建时间
+    is_all不存在是有以下字段:    
+    relation_cap    array       最新交易信息
+    relation_cap_min        array       最高最低相关信息
+
+
+    relation_cap字段说明:
+        price_usd           string          当前兑换美元价格
+        price_btc           string          当前兑换btc价格
+        volume_usd_24h  string          24小时内美元交易总量
+        market_cap_usd  string
+        available_supply    string
+        total_supply        string
+        percent_change_1h   string
+        percent_change_24h  string
+        percent_change_7d   strng
+        last_updated        string          更新时间,时间戳
+        price_cny           string          当前兑换人民币价格
+        volume_cny_24h      string      
+        market_cap_cny      string
+
+    relation_cap_min    字段说明:
+
+        price_usd_first     string      0点开盘美刀成交价格
+        price_usd_last      string      当前美刀成交价格
+        price_usd_low       string          当天美刀成交最低价
+        price_usd_high      string      当天美刀成交最高价
+        timestamp               string      时间戳,更新时间
+        //其他字段类似    </code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_35">2.1.25  添加行情分类[post]   market-category</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">market_ids      json                行情分类id,eg:[1,2,3]   </code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_36">2.1.26  行情详情[get]   market-category/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">start           string          开始时间,默认当天凌晨
+end             string          结束时间,默认当前服务器时间
+type            int             类型,默认1,支持1 分,2 时,3 天,4 周</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">record              array       
+list                array       图表相关信息
+
+record字段子集说明:
+
+    id          int             行情分类ID
+    name        string          网站名称
+    flag        string          行情标记,用于显示以及关联行情实时数据
+    token       string          网站token
+    url         string          网站url
+    created_at  string          创建时间
+    is_all不存在是有以下字段:    
+    relation_cap    array       最新交易信息
+    relation_cap_min        array       最高最低相关信息
+
+
+    relation_cap字段说明:
+        price_usd           string          当前兑换美元价格
+        price_btc           string          当前兑换btc价格
+        volume_usd_24h  string          24小时内美元交易总量
+        market_cap_usd  string
+        available_supply    string
+        total_supply        string
+        percent_change_1h   string
+        percent_change_24h  string
+        percent_change_7d   strng
+        last_updated        string          更新时间,时间戳
+        price_cny           string          当前兑换人民币价格
+        volume_cny_24h      string      
+        market_cap_cny      string
+
+    relation_cap_min    字段说明:
+
+        price_usd_first     string      0点开盘美刀成交价格
+        price_usd_last      string      当前美刀成交价格
+        price_usd_low       string          当天美刀成交最低价
+        price_usd_high      string      当天美刀成交最高价
+        timestamp               string      时间戳,更新时间
+        //其他字段类似
+
+list字段子集说明:
+
+        price_usd_first     string      0点开盘美刀成交价格
+        price_usd_last      string      当前美刀成交价格
+        price_usd_low       string          当天美刀成交最低价
+        price_usd_high      string      当天美刀成交最高价
+
+        //其他字段类似</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_37">2.1.27  用户行情提醒列表[get]   market-notification</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list                array
+
+list字段子集说明:
+
+    id          int             行情分类ID
+    name        string          网站名称
+    flag        string          行情标记,用于显示以及关联行情实时数据
+    token       string          网站token
+    url         string          网站url
+    created_at  string          创建时间
+    relation_notification_count int         用户是否已添加提醒,0表示没有添加
+    relation_notification   array       用户提醒信息, relation_notification_count为0是,本字段返回空数组
+    relation_cap            array       最新行情信息
+
+    relation_notification字段子集说明:
+
+        upper_limit     string      上限
+        lower_limit     string      下限
+
+    relation_cap字段说明:
+
+        price_usd           string          当前兑换美元价格
+        price_btc           string          当前兑换btc价格
+        volume_usd_24h  string          24小时内美元交易总量
+        market_cap_usd  string
+        available_supply    string
+        total_supply        string
+        percent_change_1h   string
+        percent_change_24h  string
+        percent_change_7d   strng
+        last_updated        string          更新时间,时间戳
+        price_cny           string          当前兑换人民币价格
+        volume_cny_24h      string      
+        market_cap_cny      string</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_38">2.1.28  添加用户行情提醒[post]   market-notification</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">market_arr      json            数据格式:[{&quot;market_id&quot;:11,&quot;upper_limit&quot;:11,&quot;lower_limit&quot;:222}];其中market_id为行情id 
+currency            string          当前用户选择的法币币种(usd或cny)</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_39">2.1.28.1  修改用户行情提醒[put]   market-notification/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">upper_limit     string      上限
+lower_limit     string      下限  </code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_40">2.1.28.2  删除用户行情提醒[delete]   market-notification/{:id}</h4>
+
+<p><code>请求参数:</code> </p>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_41">2.1.29  获取货币单位及用户选择情况[get]   monetary-unit</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list            array
+
+list字段子集说明:
+
+    id          int             货币单位ID
+    name        string
+    created_at  string      创建时间
+    user_unit_count     int     0表示用户没选择当前货币单位</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_42">2.1.30  变更用户选择的货币单位[post]   monetary-unit</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">monetary_unit_id        int         货币单位ID</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_43">2.1.31  ico列表[get]   ico</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">page            int             默认1
+per_page        int             分页数,默认10</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list            array
+
+list字段子集说明:
+
+    id          int             icoID
+    title       string          标题
+    img         string          
+    intro       string          简介
+    start_at    string          开始时间,用于列表页面tag显示判断
+    end_at      string
+    cny         stirng          币种
+    block_net   string          区块网络
+    address     string          合约地址
+    url         string          详情url,直接访问url</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_44">2.1.32  ico订单列表[get]   ico-order</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">page            int             默认1
+per_page        int             分页数,默认10</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list                array
+
+list字段子集说明:
+
+    id              int                 订单ID
+    user_id     int                 付款人ID
+    wallet_id       int                 钱包ID
+    trade_no        string              交易单号
+    pay_address     string              付款地址
+    receive_address     stirng          收款地址
+    fee             string              交易金额
+    handle_fee      string              手续费
+    hash            strig
+    created_at      string          订单创建时间
+    ico             array               ico信息
+
+    ico字段说明:
+
+        title       string          标题  
+        cny         stirng          币种</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_45">2.1.33  创建ico订单[post]   ico-order</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">wallet_id           int             钱包ID
+ico_id              int             ICOID
+trade_no            string          交易单号
+pay_address         stirng      支付钱包地址
+receive_address     string      收款/合约地址
+fee                 string          支付金额
+handle_fee      string          手续费
+hash                string          交易hash
+
+//备注:这里支付金额,手续费都没有带单位,单位沿用的ico详情的cny字段</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_46">2.1.34  ico订单详情[get]   ico-order/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">record              array
+
+record字段说明:
+
+    id              int                 订单ID
+    user_id     int                 付款人ID
+    wallet_id       int                 钱包ID
+    trade_no        string              交易单号
+    pay_address     string              付款地址
+    receive_address     stirng          收款地址
+    fee             string              交易金额
+    handle_fee      string              手续费
+    hash            strig
+    created_at      string          订单创建时间
+    ico             array               ico信息
+
+    ico字段说明:
+
+        title       string          标题  
+        cny         stirng          币种</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_47">2.1.35  gas详情(用于ico参投)[get]   gas</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">category_id     int             钱包/gnt类型
+type                int             0钱包,1gnt,默认钱包</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">record              array
+
+record字段说明:
+
+    name            string              代币名称
+    gas             stirng
+    icon            string
+    address     string              合约地址</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_48">2.1.36  获取sts[get]   sts</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">RequestId           string
+AssumedRoleUser     array       通过扮演角色接口获取的临时身份
+Credentials     array           访问凭证
+
+AssumedRoleUser字段说明:
+
+        AssumedRoleId       string      该角色临时身份的用户ID
+        Arn         string          该角色临时身份的资源描述符
+
+Credentials字段说明:
+
+        AccessKeySecret     string      访问密钥</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_49">2.1.37  获取文章详情[get]   article/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">html页面</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_50">注意:以下扩展接口统一使用post方式,另:<a href="https://docs.google.com/spreadsheets/d/1-H-D_PXrIinVCl4CFLGJWfVz4AsjIWktyuy88uY2O90/edit#gid=0">参考地址</a>(我也不知道个字段含义)</h4>
+
+<h4 id="toc_51">2.1.38  获取gas价格[post]   extend/getGasPrice</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_52">2.1.39  获取用户交易次数[post]   extend/getTransactionCount</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">address</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_53">2.1.40 发送签名后的交易[post]   extend/sendRawTransaction</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">data</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_54">2.1.41 获得交易详情[post]   extend/getTransaction</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">txHash</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_55">2.1.42 获得账户余额(ETH)[post]   extend/getBalance</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">address</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_56">2.1.43 获得代币余额(Tokens)[post]   extend/balanceOf</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">contract
+address</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_57">2.1.44 获得代币总发行量[post]   extend/totalSupply</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">contract</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_58">2.1.45 代币转账ABI[post]   extend/transferABI</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">contract
+to
+value</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_59">2.1.46 交易市场价格[post]   extend/priceList</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_60">2.1.47 当前最大块号[post]   extend/blockNumber</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_61">2.1.48 获得当前块的发生速度（每秒多少块）,用于评估众筹开始时间[post]   extend/blockPerSecond</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_62">2.1.49 获取事务[post]   extend/getTransactions</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">from
+to
+address</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_63">2.1.50 获取事务详情[post]   extend/getTransactionById</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">txid</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_64">2.1.51 查询费率[post]   extend/estimateFee</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">nbBlocks</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_65">2.1.52 查询余额[post]   extend/address</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">address</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_66">2.1.51 getEstimateGas[post]   extend/getEstimateGas</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">to              string          转账目标地址</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_67">2.1.53 钱包余额及市场行情[get]   conversion</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">wallet_ids    json          钱包ID(批量查询)</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list            array
+
+list字段子集说明:
+
+    balance     string      钱包余额(16进制)
+    category        array
+
+    category字段说明:
+
+        name        string      钱包类型
+        cap         array       钱包类型当前行情
+
+        cap字段说明:
+
+            price_usd       string      美刀
+            price_btc       string      btc
+            price_cny       string      人民币</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_68">2.1.54 钱包代币列表余额及市场行情[get]   conversion/{:wallet_id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list            array
+
+list字段子集说明:
+
+    balance     string      代币余额(16进制)
+    gnt_category        array
+
+    gnt_category字段说明:
+
+        name        string      代币名称
+        icon        string      代币图标路径
+        cap         array       钱包类型当前行情
+
+        cap字段说明:
+
+            price_usd       string      美刀
+            price_btc       string      btc
+            price_cny       string      人民币</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_69">2.1.55  消息列表[get]   message</h4>
+
+<p><code>请求参数:</code></p>
+
+<div><pre><code class="language-none">type            int             0未读,1已读,默认0
+page            int             页码,默认1
+per_page        int             每页显示条数,默认10</code></pre></div>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">list            array           
+
+list字段子集说明:
+
+    id          int         消息ID
+    title       string
+    content     string      
+    created_at  string</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_70">2.1.56  消息标记已读[put]   message/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_71">2.1.57  删除消息[delete]   message/{:id}</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_72">2.1.58  获取最小块高[get]   min-block</h4>
+
+<p><code>请求参数:</code></p>
+
+<p><code>成功返回:</code></p>
+
+<div><pre><code class="language-none">min_block_num   string</code></pre></div>
+
+<p><code>失败返回:</code></p>
+
+<h4 id="toc_73">2.1.59  移动推送说明</h4>
+
+<p>推送都是按ACCOUNT方式推送,故在注册的时候使用open_id作为注册id.</p>
+
+<p>推送信息扩展字段:</p>
+
+<div><pre><code class="language-none">resource_type       string          ICO_ORDER Ico订单,WALLET_ORDER 钱包订单(包括钱包里的代币转账),ICO_ARTICLE Ico众投文章,SYSTEM 系统消息,MARKET  行情信息   有对应详情的跳对应详情 没有的,比如系统消息,跳消息列表
+
+resource_id     int             跳转详情的ID</code></pre></div>
+
+
+
+
+</body>
+
+</html>

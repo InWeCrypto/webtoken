@@ -1,0 +1,28 @@
+.z-title {
+    position: relative;
+    height: 36px;
+    margin: 10px 0;
+}
+
+.z-title .z-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.z-title .z-search {
+    width: 21%;
+}
+
+.z-paginate {
+    margin-top: 30px;
+    float: right;
+}
+.content{
+    left: 12%;
+}
+
+.z-menu .el-button{
+    width: 100%;
+    margin: 0 auto;
+}
