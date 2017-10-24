@@ -15,7 +15,7 @@ $app = new Illuminate\Foundation\Application(
     realpath(__DIR__.'/../')
 );
 
-$app->useEnvironmentPath(__DIR__.'/env')
+$app->useEnvironmentPath(__DIR__.'/env');
 
 /*
 |--------------------------------------------------------------------------
