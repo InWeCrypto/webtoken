@@ -17,7 +17,7 @@ Route::get('/', function () {
 //	dispatch(new \App\Jobs\MQChangeStatus('0x4a646e2fcc5bada1bc7e38b25e10159f228ec55d9883e787aefc059d81095f5a'));
 //	dd(\App\Model\WalletOrder::where('hash','0xac6182274dd8673dab7a3bfb3b5720c38437de9b14539d4b2102e255a3ba19b2')->get());
 //		dd('success');
-	return redirect('index.html');
+	return redirect(url('index.html'));
 });
 
 
