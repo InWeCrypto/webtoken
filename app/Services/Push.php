@@ -24,12 +24,12 @@ class Push
 	public static function process()
 	{
 		$config = config('mq');
-		$iClientProfile = \DefaultProfile::getProfile("cn-hangzhou", $config['Ak'], $config['Sk']);
+		$iClientProfile = \DefaultProfile::getProfile("cn-hangzhou", env('Ak', $config['Ak']), env('Sk', $config['Sk']));
 		$client = new \DefaultAcsClient($iClientProfile);
 		$request = new PushRequest();
 
 // 推送目标
-		$request->setAppKey($config['AppKey']);
+		$request->setAppKey(env('AppKey', $config['AppKey']));
 		$request->setTarget("ALL"); //推送目标: DEVICE:推送给设备; ACCOUNT:推送给指定帐号,TAG:推送给自定义标签; ALL: 推送给全部
 		$request->setTargetValue("ALL"); //根据Target来设定，如Target=device, 则对应的值为 设备id1,设备id2. 多个值使用逗号分隔.(帐号与设备有一次最多100个的限制)
 		$request->setDeviceType("ANDROID"); //设备类型 ANDROID iOS ALL.
@@ -61,10 +61,10 @@ class Push
 	public static function doAction($title, $message, $data = ['resource_type' => 'SYSTEM', 'resource_id' => 0], $targetType = 'ALL', $targetValue = 'ALL', $deviceType = 'ALL')
 	{
 		$config = config('mq');
-		$iClientProfile = \DefaultProfile::getProfile("cn-hangzhou", $config['Ak'], $config['Sk']);
+		$iClientProfile = \DefaultProfile::getProfile("cn-hangzhou", env('Ak', $config['Ak']), env('Sk', $config['Sk']));
 		$client = new \DefaultAcsClient($iClientProfile);
 		$request = new PushRequest();
-		$request->setAppKey($config['AppKey']);
+		$request->setAppKey(env('AppKey', $config['AppKey']));
 		$request->setTarget($targetType); //推送目标: DEVICE:推送给设备; ACCOUNT:推送给指定帐号,TAG:推送给自定义标签; ALL: 推送给全部
 		$request->setTargetValue($targetValue); //根据Target来设定，如Target=device, 则对应的值为 设备id1,设备id2. 多个值使用逗号分隔.(帐号与设备有一次最多100个的限制)
 		$request->setDeviceType($deviceType); //设备类型 ANDROID iOS ALL.
