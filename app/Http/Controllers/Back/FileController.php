@@ -32,8 +32,11 @@ class FileController extends Controller
 		$ext = $this->getExt($file);
 		// 移动到目录
 //			$target = $file->move($tempPath . $path, $name);
-		$bucket = 'cryptobox';
-		$ossClient = new OssClient('LTAITYEbsi2WOSCd', 'd9MuUqH9rN8ctF6AklWsXcxI3dyEVP', 'oss-cn-shenzhen.aliyuncs.com', false);
+		$bucket = env('BucketName','');
+		$ak = env('Ak','');
+		$sk = env('Sk','');	
+		$host = env('OssHost','');
+		$ossClient = new OssClient($ak, $sk, $host, false);
 		if (is_null($ossClient)) {
 			return fail('','内部错误');
 		}

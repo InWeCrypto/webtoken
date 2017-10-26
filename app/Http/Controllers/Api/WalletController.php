@@ -43,7 +43,7 @@ class WalletController extends BaseController
 			return fail('', '该钱包地址已存在');
 		}
 		try {
-			sendCurl(env('API_URL', config('user_config.unichain_url')) . '/eth/getBalance', ['address' => $request->get('address')], null, 'POST');
+			sendCurl(env('TRADER_URL', config('user_config.unichain_url')) . '/eth/getBalance', ['address' => $request->get('address')], null, 'POST');
 		} catch (\Exception $e) {
 			return fail('', '该钱包地址不是合法的地址');
 		}
