@@ -10,6 +10,7 @@
 namespace App\Services\Mq;
 
 
+use App\Model\GntCategory;
 use App\Model\Message;
 use App\Model\Wallet;
 use App\Model\WalletCategory;
@@ -159,16 +160,22 @@ class HttpConsumer
 					];
 					if ($eth->type) {
 						//推导代币类型地址
-						$tokenKey = Wallet::ofAddress($eth->addr_from)->count() ? $eth->addr_to : $eth->addr_from;
-						$category = WalletCategory::where('address', $tokenKey)->first();
+//						$tokenKey = Wallet::ofAddress($eth->addr_from)->count() ? $eth->addr_to : $eth->addr_from;
+//						$category = WalletCategory::where('address', $tokenKey)->first();
+
+						$category = GntCategory::where('address', $eth->addr_to)->first();
 						if (!$category) {
 							Log::info('记录:' . json_encode($eth) . '转入/转出,查询不到钱包类型');
 							throw new \Exception('转入/转出,查询不到钱包类型');
 						}
-						$changData = strtoupper($category->name) == 'ETH' ? [
-							"fee" => $eth->value,
-							"flag" => 'ETH',
-						] : [
+//						$changData = strtoupper($category->name) == 'ETH' ? [
+//							"fee" => $eth->value,
+//							"flag" => 'ETH',
+//						] : [
+//							"fee" => $eth->token_value,
+//							"flag" => strtoupper($category->name),
+//						];
+						$changData = [
 							"fee" => $eth->token_value,
 							"flag" => strtoupper($category->name),
 						];
