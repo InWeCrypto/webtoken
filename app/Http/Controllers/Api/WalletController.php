@@ -43,7 +43,7 @@ class WalletController extends BaseController
 			return fail('', '该钱包地址已存在');
 		}
 		try {
-			sendCurl(env('TRADER_URL', config('user_config.unichain_url')) . '/eth/getBalance', ['address' => $request->get('address')], null, 'POST');
+			$this->checkAddress($request->get('category_id'), $request->get('address'));
 		} catch (\Exception $e) {
 			return fail('', '该钱包地址不是合法的地址');
 		}
@@ -77,6 +77,44 @@ class WalletController extends BaseController
 	{
 		$wallet = Wallet::ofUserId($this->user->id)->findOrFail($id);
 		return $wallet->delete() ? success() : fail();
+	}
+
+	/**
+	 * 
+	 * @return bool
+	 */
+	private function checkAddress($category_id, $address)
+	{
+		$result = '';
+		$walletCategory = \App\Model\WalletCategory::findOrFail($category_id,['name']);
+		switch (strtolower($walletCategory->name)) {
+			case 'eth':
+				$result = sendCurl(
+							env('TRADER_URL_ETH', config('user_config.unichain_url')) . '/eth/getBalance',
+							compact('address'),
+							null,
+							'POST');
+				break;
+			case 'neo':
+				$result = sendCurl(
+								env('TRADER_URL_NEO', config('user_config.unichain_url')),
+								[
+									'jsonrpc' => '2.0',
+									'method' => 'getaccountstate',
+									'params' => [$address],
+								    'id' => 1
+								],
+								null,
+								'POST');
+				if($result['error']){
+					throw new \Exception('不是有效的neo钱包地址!');
+				}
+				break;
+			default:
+				throw new \Exception('未知钱包类型');
+				break;
+		}
+		return true;
 	}
 
 }
