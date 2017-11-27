@@ -106,7 +106,7 @@ class WalletController extends BaseController
 								],
 								null,
 								'POST');
-				if($result['error']){
+				if(!empty($result['error'])){
 					throw new \Exception('不是有效的neo钱包地址!');
 				}
 				break;
