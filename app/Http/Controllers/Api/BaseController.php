@@ -17,15 +17,15 @@ class BaseController extends Controller
 			$request['token'] = $request->header('ct');
 			$this->user = Auth::guard('api')->user();
 		}
-		if($request->has('address')){
-			$request['address'] = strtolower($request->address);
-		}
-		if($request->has('pay_address')){
-			$request['pay_address'] = strtolower($request->pay_address);
-		}
-		if($request->has('receive_address')){
-			$request['receive_address'] = strtolower($request->receive_address);
-		}
+		// if($request->has('address')){
+		// 	$request['address'] = strtolower($request->address);
+		// }
+		// if($request->has('pay_address')){
+		// 	$request['pay_address'] = strtolower($request->pay_address);
+		// }
+		// if($request->has('receive_address')){
+		// 	$request['receive_address'] = strtolower($request->receive_address);
+		// }
 //		$this->user = User::find(1);
 //		$this->user = new \stdClass();
 //		$this->user->id = 1;
