@@ -246,6 +246,25 @@ class ExtendController extends BaseController
 		];
 		return success(sendCurl($uri, $param, null, 'POST'));
 	}
+	/**
+	 * 获取NEO 的 utxo
+	 * @param  Request $request
+	 * @return Array
+	 */
+	public function getNeoUtxo(Request $request)
+	{
+		$this->validate($request, [
+			'address' => 'required',
+		]);
+		$uri = env('TRADER_URL_NEO', config('user_config.api_url')) . '/extend';
+		$param = [
+			"jsonrpc" => "2.0",
+			"method" => "balance",
+			"params" => [$request->get('address'), $request->header('neo-asset-id')],
+			"id" => 0
+		];
+		return success(sendCurl($uri, $param, null, 'POST'));
+	}
 
 
 	/**
