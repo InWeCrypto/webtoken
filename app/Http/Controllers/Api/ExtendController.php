@@ -255,12 +255,13 @@ class ExtendController extends BaseController
 	{
 		$this->validate($request, [
 			'address' => 'required',
+			'type' => 'required'
 		]);
 		$uri = env('TRADER_URL_NEO', config('user_config.api_url')) . '/extend';
 		$param = [
 			"jsonrpc" => "2.0",
 			"method" => "balance",
-			"params" => [$request->get('address'), $request->header('neo-asset-id')],
+			"params" => [$request->get('address'), $request->header($request->get('type')))],
 			"id" => 0
 		];
 		return success(sendCurl($uri, $param, null, 'POST'));
