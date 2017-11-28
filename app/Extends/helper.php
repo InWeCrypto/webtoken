@@ -636,7 +636,7 @@ if (!function_exists('sendCurl')) {
 			\Illuminate\Support\Facades\Log::info($msg);
 			throw new \Exception($msg);
 		}
-		return $result ? $result : $res;
+		return $result || is_array($result) ? $result : $res;
 	}
 }
 
