@@ -84,6 +84,7 @@ class ConversionController extends BaseController
 					'name' => 'gas',
 					'unavailable' => $res['result']['Unavailable'] ?: 0,
 					'available' => $res['result']['Available'] ?: 0,
+					'balance' => $this->getWalletBalance('neo', $record->address, \Request::header('neo-gas-asset-id')),
 					'cap' => Pricecoinmarketcap::ofSymbol('GAS')->orderBy('last_updated', 'desc')->first()
 				];
 				$record->gnt = [collect($gnt)];
@@ -94,7 +95,7 @@ class ConversionController extends BaseController
 	}
 
 	// 钱包余额
-	public function getWalletBalance($category_name, $address){
+	public function getWalletBalance($category_name, $address, $asset_id = null){
 		$return = 0;
 		switch(strtolower($category_name)){
 			case 'eth':
@@ -104,7 +105,7 @@ class ConversionController extends BaseController
 				$return = $res['value'];
 			break;
 			case 'neo':
-				$neo_asset_id = \Request::header('neo-asset-id');
+				$neo_asset_id = $asset_id ?: \Request::header('neo-asset-id');
 				$uri          = env('TRADER_URL_NEO', config('user_config.unichain_url'));
 				$param        = [
 					'jsonrpc' => '2.0',
