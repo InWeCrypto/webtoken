@@ -629,7 +629,7 @@ if (!function_exists('sendCurl')) {
 		//4.关闭curl资源，并且释放系统资源
 		curl_close($ch);
 		if ($httpCode != 200) {
-			$msg = $err ? $err : '请求第三方服务器失败';
+			$msg = $err ? $err : $httpCode . '请求第三方服务器失败';
 			if($result && $result['message']){
 				$msg = $result['message'];
 			}
