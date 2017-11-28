@@ -266,6 +266,14 @@ class ExtendController extends BaseController
 		];
 		return success(sendCurl($uri, $param, null, 'POST'));
 	}
+	public function getNeoOrderStatus(Request $request)
+	{
+		$this->validate($request, [
+			'trade_no' => 'required'
+		]);
+		$uri = env('TRADER_WALLET_URL_NEO', config('user_config.api_url')) . '/order/'. $request->get('trade_no');
+		return success(sendCurl($uri));
+	}
 
 
 	/**
