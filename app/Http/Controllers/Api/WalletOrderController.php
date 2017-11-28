@@ -29,35 +29,48 @@ class WalletOrderController extends BaseController
 //			"type.required" => '请选择交易类型,1转账,2收款',
 			"flag.required" => '请填写钱包/代币类型:如eth',
 		]);
-		/**
-		 * 更新订单状态
-		 */
-		updateOrderStatus();
-//		$type = $request->get('type', 1);
 		$walletId = $request->get('wallet_id');
 		$flag     = strtoupper($request->get('flag', 'ETH'));
-//		if (1 == $type) {
-//			$query = WalletOrder::ofFlag($request->get('flag','ETH'))->ofUserId($this->user->id)->ofWalletId($walletId);
-//		} else {
-//			$query = WalletOrder::ofFlag($request->get('flag','ETH'))->whereHas('relationReceiveWallet', function ($query) use ($walletId) {
-//				$query->ofUserId($this->user->id)->where('id', $walletId);
-//			});
-//		}
-//		$query = WalletOrder::ofFlag($request->get('flag', 'ETH'))->where(function ($query) use ($walletId) {
-//			$query->where(function ($query) use ($walletId) {
-//				$query->ofUserId($this->user->id)->ofWalletId($walletId);
-//			})->orWhere(function ($query) use ($walletId) {
-//				$query->whereHas('relationReceiveWallet', function ($query) use ($walletId) {
-//					$query->ofUserId($this->user->id)->where('id', $walletId);
-//				});
-//			});
-//		});
-		$query = WalletOrder::ofFlag($flag)->whereHas('relationWallet', function ($query) use ($walletId) {
-			$query->ofUserId($this->user->id)->where('id', $walletId);
-		});
+		switch(strtolower($flag)){
+			case 'eth':
+				/**
+				 * 更新订单状态
+				 */
+				updateOrderStatus();
+				// $type = $request->get('type', 1);
+				// if (1 == $type) {
+				// 	$query = WalletOrder::ofFlag($request->get('flag','ETH'))->ofUserId($this->user->id)->ofWalletId($walletId);
+				// } else {
+				// 	$query = WalletOrder::ofFlag($request->get('flag','ETH'))->whereHas('relationReceiveWallet', function ($query) use ($walletId) {
+				// 		$query->ofUserId($this->user->id)->where('id', $walletId);
+				// 	});
+				// }
+				// $query = WalletOrder::ofFlag($request->get('flag', 'ETH'))->where(function ($query) use ($walletId) {
+				// 	$query->where(function ($query) use ($walletId) {
+				// 		$query->ofUserId($this->user->id)->ofWalletId($walletId);
+				// 	})->orWhere(function ($query) use ($walletId) {
+				// 		$query->whereHas('relationReceiveWallet', function ($query) use ($walletId) {
+				// 			$query->ofUserId($this->user->id)->where('id', $walletId);
+				// 		});
+				// 	});
+				// });
+				$query = WalletOrder::ofFlag($flag)->whereHas('relationWallet', function ($query) use ($walletId) {
+					$query->ofUserId($this->user->id)->where('id', $walletId);
+				});
 
-		$list = $query->latest()->simplePaginate($request->get('per_page'))->toArray();
-		$list = $list['data'];
+				$list = $query->latest()->simplePaginate($request->get('per_page'))->toArray();
+				$list = $list['data'];
+			break;
+			case 'neo':
+				$wallet = Wallet::ofUserId($this->user->id)->findOrFail($walletId);
+				$url = env('TRADER_WALLET_URL_NEO', config('user_config.api_url')) . '/orders';
+				$url.= '/'.$wallet->address;
+				$url.= '/'.$request->get('asset_id');
+				$url.= '/'.$request->get('offset', 0);
+				$url.= '/'.$request->get('size', 10);
+				$list = sendCurl($wallet, null, null, 'GET'); 
+			break;
+		}
 
 		return success(compact('list'));
 	}
@@ -90,7 +103,6 @@ class WalletOrderController extends BaseController
 			"flag.required" => '请填写钱包/代币类型:如eth',
 		]);
 		try {
-			$request['flag'] = strtoupper($request['flag']);
 			switch(strtolower($request->get('flag'))){
 				case 'eth':
 					$block_number_uri = env('API_URL', config('user_config.api_url')) . '/eth/blockNumber';
