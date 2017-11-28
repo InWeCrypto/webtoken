@@ -35,6 +35,7 @@ class WalletOrderController extends BaseController
 		updateOrderStatus();
 //		$type = $request->get('type', 1);
 		$walletId = $request->get('wallet_id');
+		$flag     = strtoupper($request->get('flag', 'ETH'));
 //		if (1 == $type) {
 //			$query = WalletOrder::ofFlag($request->get('flag','ETH'))->ofUserId($this->user->id)->ofWalletId($walletId);
 //		} else {
@@ -51,9 +52,10 @@ class WalletOrderController extends BaseController
 //				});
 //			});
 //		});
-		$query = WalletOrder::ofFlag($request->get('flag', 'ETH'))->whereHas('relationWallet', function ($query) use ($walletId) {
+		$query = WalletOrder::ofFlag($flag)->whereHas('relationWallet', function ($query) use ($walletId) {
 			$query->ofUserId($this->user->id)->where('id', $walletId);
 		});
+
 		$list = $query->latest()->simplePaginate($request->get('per_page'))->toArray();
 		$list = $list['data'];
 
@@ -88,18 +90,70 @@ class WalletOrderController extends BaseController
 			"flag.required" => '请填写钱包/代币类型:如eth',
 		]);
 		try {
-			$res = sendCurl(env('API_URL', config('user_config.api_url')) . '/eth/blockNumber', [], [], 'get');
-			$request['block_number'] = hexdec($res['value']);
-			//hash
-			$res = sendCurl(env('API_URL', config('user_config.api_url')) . '/eth/sendRawTransaction', ['data' => $request->get('data')], [], 'post');
-			$request['trade_no'] = $request['hash'] = $res['txHash'];
-			$sec = Wallet::where('address', $request->get('receive_address'))->first();
-			DB::transaction(function () use ($request, $sec) {
-				WalletOrder::create(['user_id' => $this->user->id, 'own_address' => $request->get('pay_address')] + $request->all());
-				if ($sec) {
-					WalletOrder::create(['user_id' => $sec->user_id, 'own_address' => $request->get('receive_address'), 'wallet_id' => $sec->id] + $request->except('wallet_id'));
-				}
-			});
+			$request['flag'] = strtoupper($request['flag']);
+			switch(strtolower($request->get('flag'))){
+				case 'eth':
+					$block_number_uri = env('API_URL', config('user_config.api_url')) . '/eth/blockNumber';
+					$res              = sendCurl($block_number_uri, [], [], 'get');
+					$request['block_number'] = hexdec($res['value']);
+					//hash
+					$send_raw_transaction_uri   = env('API_URL', config('user_config.api_url')) . '/eth/sendRawTransaction';
+					$send_raw_transaction_param = [
+						'data' => $request->get('data')
+					];
+					$res = sendCurl($send_raw_transaction_uri, $send_raw_transaction_param, [], 'post');
+					$request['trade_no'] = $request['hash'] = $res['txHash'];
+					$sec = Wallet::where('address', $request->get('receive_address'))->first();
+					DB::transaction(function () use ($request, $sec) {
+						WalletOrder::create([
+							'user_id' => $this->user->id,
+							'own_address' => $request->get('pay_address')
+							] + $request->all()
+						);
+						if ($sec) {
+							WalletOrder::create([
+								'user_id' => $sec->user_id,
+								'own_address' => $request->get('receive_address'),
+								'wallet_id' => $sec->id
+								] + $request->except('wallet_id')
+							);
+						}
+					});
+				break;
+				case 'neo':
+					if(!$trade_no = $request->get('trade_no')){
+						throw new \Exception('NEO 请求接口,请填写订单号!');
+					}
+					if(!$asset_id = $request->get('asset_id')){
+						throw new \Exception('NEO 请求接口,转账资产类型ID!');
+					}
+					// 发起交易
+					$send_raw_transaction_uri   = env('TRADER_URL_NEO', config('user_config.api_url'));
+					$send_raw_transaction_param = [
+						'jsonrpc' => '2.0',
+						'method' => 'sendrawtransaction',
+						'params' => [$request->get('data')],
+						'id' => '1'
+					];
+					$res = sendCurl($send_raw_transaction_uri, $send_raw_transaction_param, [], 'post');
+					// $res['result'] == false 表示失败
+					if(empty($res['result'])){
+						throw new \Exception('NEO 请求接口,发起交易失败!');
+					}
+					// 调用Neo创建订单接口
+					$order_uri   = env('TRADER_WALLET_URL_NEO', config('user_config.api_url')) . '/order';
+					$order_param = [
+						'tx' => $trade_no,
+						'asset' => $asset_id,
+						'from' => $request->get('pay_address'),
+						'to' => $request->get('receive_address'),
+						'value' => $request->get('fee'),
+					];
+					// 返回200就算成功
+					// 失败就直接throw
+					sendCurl($order_uri, $order_param, null, 'POST');
+				break;
+			}
 			return success();
 
 		} catch (\Exception $e) {

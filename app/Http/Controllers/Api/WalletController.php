@@ -78,7 +78,7 @@ class WalletController extends BaseController
 		$wallet  = Wallet::ofUserId($this->user->id)->findOrFail($id);
 		$address = $wallet->address;
 		
-		$wallet_message_url = env('TRADER_PUSH_URL_NEO', config('user_config.unichain_url')) . '/wallet/' .$this->user->open_id . '/' . $address;
+		$wallet_message_url = env('TRADER_WALLET_URL_NEO', config('user_config.unichain_url')) . '/wallet/' .$this->user->open_id . '/' . $address;
 		sendCurl($wallet_message_url, [], null, 'DELETE');
 		return $wallet->delete() ? success() : fail();
 	}
@@ -114,7 +114,7 @@ class WalletController extends BaseController
 					throw new \Exception('不是有效的neo钱包地址!');
 				}
 				// 推送消息接口
-				$wallet_message_url = env('TRADER_PUSH_URL_NEO', config('user_config.unichain_url')) . '/wallet/' .$this->user->open_id . '/' . $address;
+				$wallet_message_url = env('TRADER_WALLET_URL_NEO', config('user_config.unichain_url')) . '/wallet/' .$this->user->open_id . '/' . $address;
 				sendCurl($wallet_message_url, [], null, 'POST');
 				break;
 			default:
