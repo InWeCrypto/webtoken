@@ -261,7 +261,7 @@ class ExtendController extends BaseController
 		$param = [
 			"jsonrpc" => "2.0",
 			"method" => "balance",
-			"params" => [$request->get('address'), $request->header($request->get('type')))],
+			"params" => [$request->get('address'), $request->header($request->get('type'))],
 			"id" => 0
 		];
 		return success(sendCurl($uri, $param, null, 'POST'));
