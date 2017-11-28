@@ -62,13 +62,16 @@ class WalletOrderController extends BaseController
 				$list = $list['data'];
 			break;
 			case 'neo':
+				if(!$asset_id = $request->get('asset_id')){
+					throw new \Exception('请填写 NEO ASSET ID');
+				}
 				$wallet = Wallet::ofUserId($this->user->id)->findOrFail($walletId);
 				$url = env('TRADER_WALLET_URL_NEO', config('user_config.api_url')) . '/orders';
 				$url.= '/'.$wallet->address;
-				$url.= '/'.$request->get('asset_id');
+				$url.= '/'.$asset_id;
 				$url.= '/'.$request->get('offset', 0);
 				$url.= '/'.$request->get('size', 10);
-				$list = sendCurl($wallet, null, null, 'GET'); 
+				$list = sendCurl($url); 
 			break;
 		}
 
@@ -147,7 +150,9 @@ class WalletOrderController extends BaseController
 						'params' => [$request->get('data')],
 						'id' => '1'
 					];
+
 					$res = sendCurl($send_raw_transaction_uri, $send_raw_transaction_param, [], 'post');
+
 					// $res['result'] == false 表示失败
 					if(empty($res['result'])){
 						throw new \Exception('NEO 请求接口,发起交易失败!');
