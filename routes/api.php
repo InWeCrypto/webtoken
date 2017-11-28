@@ -40,6 +40,7 @@ $router->group(['namespace' => 'Api'], function ($router) {
 			$router->any('getTransactionById', 'ExtendController@getTransactionById');
 			$router->any('estimateFee', 'ExtendController@estimateFee');
 			$router->any('address', 'ExtendController@address');
+			$router->any('getNeoClaimUtxo', 'ExtendController@getNeoClaimUtxo');
 		});
 		$router->resource('message', 'MessageController');
 		$router->resource('conversion', 'ConversionController');
