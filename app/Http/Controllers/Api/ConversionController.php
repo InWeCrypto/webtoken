@@ -25,11 +25,10 @@ class ConversionController extends BaseController
 			'wallet_ids' => 'required|json'
 		]);
 		$wallets = json_decode($request->get('wallet_ids'), true);
-		$uri = env('API_URL',config('user_config.unichain_url'));
 		$list = Wallet::with('category')
 			->ofUserId($this->user->id)
 			->whereIn('id', $wallets)
-			->get()->each(function ($val) use ($uri) {
+			->get()->each(function ($val){
 				$val->category->cap = Pricecoinmarketcap::ofSymbol($val->category->name)
 										->orderBy('last_updated', 'desc')
 										->first();
@@ -87,7 +86,7 @@ class ConversionController extends BaseController
 					'available' => $res['result']['Available'] ?: 0,
 					'cap' => Pricecoinmarketcap::ofSymbol('GAS')->orderBy('last_updated', 'desc')->first()
 				];
-				$record->gnt = collect($gnt);
+				$record->gnt = [collect($gnt)];
 			break;
 		}
 
@@ -99,6 +98,7 @@ class ConversionController extends BaseController
 		$return = 0;
 		switch(strtolower($category_name)){
 			case 'eth':
+				$address= strtolower($address);
 				$uri    = env('TRADER_URL_ETH', config('user_config.unichain_url')) . '/eth/getBalance';
 				$res    = sendCurl($uri, compact('address'), null, 'POST');
 				$return = $res['value'];
