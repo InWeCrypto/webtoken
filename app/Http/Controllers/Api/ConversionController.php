@@ -46,14 +46,50 @@ class ConversionController extends BaseController
 	 */
 	public function show($walletId)
 	{
-		$record = Wallet::with('gnt.gntCategory')->ofUserId($this->user->id)->findOrFail($walletId);
-		$uri = env('API_URL',config('user_config.unichain_url'));
+		$record = Wallet::with('gnt.gntCategory')->findOrFail($walletId);
+		// $record = Wallet::with('gnt.gntCategory')->ofUserId($this->user->id)->findOrFail($walletId);
 		//测算价值
-		$list = $record->gnt->each(function ($val) use ($uri, $record) {
-			$val->gntCategory->cap = Pricecoinmarketcap::ofSymbol($val->gntCategory->name)->orderBy('last_updated', 'desc')->first();
-			$res = sendCurl($uri . '/eth/tokens/balanceOf', ['contract' => $val->gntCategory->address, 'address' => $record->address], null, 'POST');
-			$val->balance = $res['value'];
-		})->sortByDesc('updated_at')->values()->all();
+		switch(strtolower($record->category->name)){
+			case 'eth':
+				$list = $record->gnt->each(function ($val) use ($record) {
+					$val->gntCategory->cap = Pricecoinmarketcap::ofSymbol($val->gntCategory->name)
+												->orderBy('last_updated', 'desc')
+												->first();
+							$uri   = env('API_URL',config('user_config.unichain_url')) . '/eth/tokens/balanceOf';
+							$param = [
+								'contract' => $val->gntCategory->address,
+								'address' => $record->address
+							];
+							$res = sendCurl($uri, $param, null, 'POST');
+							$val->balance = $res['value'];
+				})->sortByDesc('updated_at')->values()->all();
+			break;
+			case 'neo':
+				// neo 钱包没有代币,默认为gas
+				unset($record->gnt);
+				// neo 余额
+				$record->balance = $this->getWalletBalance('neo', $record->address);
+				$record->cap = Pricecoinmarketcap::ofSymbol('NEO')->orderBy('last_updated', 'desc')->first();
+			case 'gas':
+				$uri = env('TRADER_URL_NEO',config('user_config.unichain_url')) . '/extend';
+				$param = [
+					'jsonrpc' => '2.0',
+					'method' => 'claim',
+					'method' => 'claim',
+					'params' => [$record->address],
+					'id' => 0
+				];
+				$res = sendCurl($uri, $param, null, 'POST');
+				// neo 默认代币 gas 
+				$gnt = [
+					'name' => 'gas',
+					'unavailable' => $res['result']['Unavailable'] ?: 0,
+					'available' => $res['result']['Available'] ?: 0,
+					'cap' => Pricecoinmarketcap::ofSymbol('GAS')->orderBy('last_updated', 'desc')->first()
+				];
+				$record->gnt = collect($gnt);
+			break;
+		}
 
 		return success(compact('record','list'));
 	}
