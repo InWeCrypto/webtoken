@@ -21,17 +21,19 @@ class ConversionController extends BaseController
 	 */
 	public function index(Request $request)
 	{
+		// \PriceCoinmarketcap::test();
 		$this->validate($request, [
 			'wallet_ids' => 'required|json'
 		]);
 		$wallets = json_decode($request->get('wallet_ids'), true);
-		$list = Wallet::with('category')
+		$list = Wallet::with('category.icoInfo')
 			->ofUserId($this->user->id)
 			->whereIn('id', $wallets)
 			->get()->each(function ($val){
-				$val->category->cap = Pricecoinmarketcap::ofSymbol($val->category->name)
-										->orderBy('last_updated', 'desc')
-										->first();
+				if(! $ico_name = $val->category->icoInfo->name){
+					\Log::info('获取'.$val->category->name.'的API名称失败!');
+				}
+				$val->category->cap = \PriceCoinmarketcap::getPrice($ico_name);
 				//钱包余额
 				$val->balance = $this->getWalletBalance($val->category->name, $val->address);
 		});
@@ -45,22 +47,24 @@ class ConversionController extends BaseController
 	 */
 	public function show($walletId)
 	{
-		$record = Wallet::with('gnt.gntCategory')->findOrFail($walletId);
-		// $record = Wallet::with('gnt.gntCategory')->ofUserId($this->user->id)->findOrFail($walletId);
+		// $record = Wallet::with('gnt.gntCategory.icoInfo')->findOrFail($walletId);
+		$record = Wallet::with('gnt.gntCategory')->ofUserId($this->user->id)->findOrFail($walletId);
 		//测算价值
 		switch(strtolower($record->category->name)){
 			case 'eth':
+				// dd($record->gnt->toArray());
 				$list = $record->gnt->each(function ($val) use ($record) {
-					$val->gntCategory->cap = Pricecoinmarketcap::ofSymbol($val->gntCategory->name)
-												->orderBy('last_updated', 'desc')
-												->first();
-							$uri   = env('API_URL',config('user_config.unichain_url')) . '/eth/tokens/balanceOf';
-							$param = [
-								'contract' => $val->gntCategory->address,
-								'address' => $record->address
-							];
-							$res = sendCurl($uri, $param, null, 'POST');
-							$val->balance = $res['value'];
+					if(! $ico_name = $val->gntCategory->icoInfo->name){
+						\Log::info('获取'.$val->gntCategory->name.'的API名称失败!');
+					}
+					$val->gntCategory->cap = \PriceCoinmarketcap::getPrice($ico_name);
+					// $uri   = env('API_URL',config('user_config.unichain_url')) . '/eth/tokens/balanceOf';
+					// $param = [
+					// 	'contract' => $val->gntCategory->address,
+					// 	'address' => $record->address
+					// ];
+					// // $res = sendCurl($uri, $param, null, 'POST');
+					// // $val->balance = $res['value'];
 				})->sortByDesc('updated_at')->values()->all();
 			break;
 			case 'neo':
@@ -68,7 +72,7 @@ class ConversionController extends BaseController
 				unset($record->gnt);
 				// neo 余额
 				$record->balance = $this->getWalletBalance('neo', $record->address);
-				$record->cap = Pricecoinmarketcap::ofSymbol('NEO')->orderBy('last_updated', 'desc')->first();
+				$record->cap = \PriceCoinmarketcap::getPrice('neo');
 			case 'gas':
 				$uri = env('TRADER_URL_NEO',config('user_config.unichain_url')) . '/extend';
 				$param = [
@@ -85,7 +89,7 @@ class ConversionController extends BaseController
 					'unavailable' => $res['result']['Unavailable'] ?: 0,
 					'available' => $res['result']['Available'] ?: 0,
 					'balance' => $this->getWalletBalance('neo', $record->address, \Request::header('neo-gas-asset-id')),
-					'cap' => Pricecoinmarketcap::ofSymbol('GAS')->orderBy('last_updated', 'desc')->first()
+					'cap' => \PriceCoinmarketcap::getPrice('gas')
 				];
 				$record->gnt = [collect($gnt)];
 			break;

@@ -54,4 +54,9 @@ class GntCategory extends Model
 	{
 		return $categoryId ? $query->where('category_id', $categoryId) : $query;
 	}
+
+	public function icoInfo()
+	{
+		return $this->hasOne(IcoList::class, 'symbol', 'name')->select('symbol','name');
+	}
 }
