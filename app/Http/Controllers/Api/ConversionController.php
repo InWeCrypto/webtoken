@@ -30,7 +30,7 @@ class ConversionController extends BaseController
 			->ofUserId($this->user->id)
 			->whereIn('id', $wallets)
 			->get()->each(function ($val){
-				if(! $ico_name = $val->category->icoInfo->name){
+				if(! $ico_name = $val->category->icoInfo ? $val->category->icoInfo->name : null){
 					\Log::info('获取'.$val->category->name.'的API名称失败!');
 				}
 				$val->category->cap = \PriceCoinmarketcap::getPrice($ico_name);
@@ -54,7 +54,7 @@ class ConversionController extends BaseController
 			case 'eth':
 				// dd($record->gnt->toArray());
 				$list = $record->gnt->each(function ($val) use ($record) {
-					if(! $ico_name = $val->gntCategory->icoInfo->name){
+					if(! $ico_name = $val->category->icoInfo ? $val->category->icoInfo->name : null){
 						\Log::info('获取'.$val->gntCategory->name.'的API名称失败!');
 					}
 					$val->gntCategory->cap = \PriceCoinmarketcap::getPrice($ico_name);
