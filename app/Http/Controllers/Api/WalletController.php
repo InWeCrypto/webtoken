@@ -45,6 +45,7 @@ class WalletController extends BaseController
 		try {
 			$this->checkAddress($request->get('category_id'), $request->get('address'));
 		} catch (\Exception $e) {
+			\Log::info($e->getMessage().', 请求原数据:'.json_encode($request->all()));
 			return fail('', '该钱包地址不是合法的地址');
 		}
 		$record = Wallet::create(['user_id' => $this->user->id] + $request->all());
