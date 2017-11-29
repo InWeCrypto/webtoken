@@ -34,4 +34,9 @@ class WalletCategory extends Model
 	{
 		return $this->hasOne(Pricecoinmarketcap::class, 'symbol', 'name')->orderBy('last_updated', 'desc');
 	}
+
+	public function icoInfo()
+	{
+		return $this->hasOne(IcoList::class, 'symbol', 'name')->select('symbol','name');
+	}
 }

@@ -13,7 +13,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        $this->app->singleton('price_coinmarketcap', function () {
+            return new \App\Services\PriceCoinmarketcap();
+        });
     }
 
     /**
