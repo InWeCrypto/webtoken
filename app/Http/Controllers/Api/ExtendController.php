@@ -227,6 +227,54 @@ class ExtendController extends BaseController
 		return success($this->send('/btc/address', $request->all(), [], 'POST'));
 	}
 
+	/**
+	 * 获取neo的claim utxo
+	 * @param  Request $request
+	 * @return array
+	 */
+	public function getNeoClaimUtxo(Request $request)
+	{
+		$this->validate($request, [
+			'address' => 'required',
+		]);
+		$uri = env('TRADER_URL_NEO', config('user_config.api_url')) . '/extend';
+		$param = [
+			"jsonrpc" => "2.0",
+			"method" => "claim",
+			"params" => [$request->get('address')],
+			"id" => 0
+		];
+		return success(sendCurl($uri, $param, null, 'POST'));
+	}
+	/**
+	 * 获取NEO 的 utxo
+	 * @param  Request $request
+	 * @return Array
+	 */
+	public function getNeoUtxo(Request $request)
+	{
+		$this->validate($request, [
+			'address' => 'required',
+			'type' => 'required'
+		]);
+		$uri = env('TRADER_URL_NEO', config('user_config.api_url')) . '/extend';
+		$param = [
+			"jsonrpc" => "2.0",
+			"method" => "balance",
+			"params" => [$request->get('address'), $request->header($request->get('type'))],
+			"id" => 0
+		];
+		return success(sendCurl($uri, $param, null, 'POST'));
+	}
+	public function getNeoOrderStatus(Request $request)
+	{
+		$this->validate($request, [
+			'trade_no' => 'required'
+		]);
+		$uri = env('TRADER_WALLET_URL_NEO', config('user_config.api_url')) . '/order/'. $request->get('trade_no');
+		return success(sendCurl($uri));
+	}
+
 
 	/**
 	 * @param $uri
