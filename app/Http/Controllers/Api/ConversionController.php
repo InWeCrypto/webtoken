@@ -33,7 +33,7 @@ class ConversionController extends BaseController
 				if(! $ico_name = $val->category->icoInfo ? $val->category->icoInfo->name : null){
 					\Log::info('获取'.$val->category->name.'的API名称失败!');
 				}
-				$val->category->cap = \PriceCoinmarketcap::getPrice($ico_name);
+				$val->category->cap = \PriceCoinmarketcap::getPrice($ico_name) ?: null;
 				//钱包余额
 				$val->balance = $this->getWalletBalance($val->category->name, $val->address);
 		});
@@ -57,7 +57,7 @@ class ConversionController extends BaseController
 					if(! $ico_name = $val->category->icoInfo ? $val->category->icoInfo->name : null){
 						\Log::info('获取'.$val->gntCategory->name.'的API名称失败!');
 					}
-					$val->gntCategory->cap = \PriceCoinmarketcap::getPrice($ico_name);
+					$val->gntCategory->cap = \PriceCoinmarketcap::getPrice($ico_name) ?: null;
 					// $uri   = env('API_URL',config('user_config.unichain_url')) . '/eth/tokens/balanceOf';
 					// $param = [
 					// 	'contract' => $val->gntCategory->address,
@@ -72,7 +72,7 @@ class ConversionController extends BaseController
 				unset($record->gnt);
 				// neo 余额
 				$record->balance = $this->getWalletBalance('neo', $record->address);
-				$record->cap = \PriceCoinmarketcap::getPrice('neo');
+				$record->cap = \PriceCoinmarketcap::getPrice('neo') ?: null;
 			case 'gas':
 				$uri = env('TRADER_URL_NEO',config('user_config.unichain_url')) . '/extend';
 				$param = [
@@ -89,7 +89,7 @@ class ConversionController extends BaseController
 					'unavailable' => $res['result']['Unavailable'] ?: 0,
 					'available' => $res['result']['Available'] ?: 0,
 					'balance' => $this->getWalletBalance('neo', $record->address, \Request::header('neo-gas-asset-id')),
-					'cap' => \PriceCoinmarketcap::getPrice('gas')
+					'cap' => \PriceCoinmarketcap::getPrice('gas') ?: null
 				];
 				$record->gnt = [collect($gnt)];
 			break;
