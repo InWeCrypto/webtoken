@@ -155,7 +155,7 @@ class WalletOrderController extends BaseController
 
 					// $res['result'] == false 表示失败
 					if(empty($res['result'])){
-						throw new \Exception('NEO 请求接口,发起交易失败!');
+						throw new \Exception('NEO 请求接口,发起交易失败!' .$res);
 					}
 					// 调用Neo创建订单接口
 					$order_uri   = env('TRADER_WALLET_URL_NEO', config('user_config.api_url')) . '/order';
