@@ -68,6 +68,8 @@ class ConversionController extends BaseController
 				})->sortByDesc('updated_at')->values()->all();
 			break;
 			case 'neo':
+				// neo 钱包没有代币,默认为gas
+				unset($record->gnt);
 				// neo 余额
 				$record->balance = $this->getWalletBalance('neo', $record->address);
 				$record->cap = \PriceCoinmarketcap::getPrice('neo') ?: null;
