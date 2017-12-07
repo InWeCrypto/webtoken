@@ -58,13 +58,13 @@ class ConversionController extends BaseController
 						\Log::info('获取'.$val->gntCategory->name.'的API名称失败!');
 					}
 					$val->gntCategory->cap = \PriceCoinmarketcap::getPrice($ico_name) ?: null;
-					// $uri   = env('API_URL',config('user_config.unichain_url')) . '/eth/tokens/balanceOf';
-					// $param = [
-					// 	'contract' => $val->gntCategory->address,
-					// 	'address' => $record->address
-					// ];
-					// // $res = sendCurl($uri, $param, null, 'POST');
-					// // $val->balance = $res['value'];
+					$uri   = env('API_URL',config('user_config.unichain_url')) . '/eth/tokens/balanceOf';
+					$param = [
+						'contract' => $val->gntCategory->address,
+						'address' => $record->address
+					];
+					$res = sendCurl($uri, $param, null, 'POST');
+					$val->balance = $res['value'];
 				})->sortByDesc('updated_at')->values()->all();
 			break;
 			case 'neo':
