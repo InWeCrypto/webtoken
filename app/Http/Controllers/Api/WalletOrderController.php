@@ -142,6 +142,22 @@ class WalletOrderController extends BaseController
 					if(!$asset_id = $request->get('asset_id')){
 						throw new \Exception('NEO 请求接口,转账资产类型ID!');
 					}
+
+					// 发起交易
+					$send_raw_transaction_uri   = env('TRADER_URL_NEO', config('user_config.api_url'));
+					$send_raw_transaction_param = [
+						'jsonrpc' => '2.0',
+						'method' => 'sendrawtransaction',
+						'params' => [$request->get('data')],
+						'id' => '1'
+					];
+
+					$res = sendCurl($send_raw_transaction_uri, $send_raw_transaction_param, [], 'post');
+					// $res['result'] == false 表示失败
+					if(empty($res['result'])){
+						throw new \Exception('NEO 请求接口,发起交易失败!' .implode("|",$res));
+					}
+					
 					// 调用Neo创建订单接口
 					$order_uri   = env('TRADER_WALLET_URL_NEO', config('user_config.api_url')) . '/order';
 					$order_param = [
@@ -157,21 +173,6 @@ class WalletOrderController extends BaseController
 						sendCurl($order_uri, $order_param, null, 'POST');
 					} catch (\Exception $e) {
 						throw new \Exception('调用'.$order_uri.'接口失败!');
-					}
-
-					// 发起交易
-					$send_raw_transaction_uri   = env('TRADER_URL_NEO', config('user_config.api_url'));
-					$send_raw_transaction_param = [
-						'jsonrpc' => '2.0',
-						'method' => 'sendrawtransaction',
-						'params' => [$request->get('data')],
-						'id' => '1'
-					];
-
-					$res = sendCurl($send_raw_transaction_uri, $send_raw_transaction_param, [], 'post');
-					// $res['result'] == false 表示失败
-					if(empty($res['result'])){
-						throw new \Exception('NEO 请求接口,发起交易失败!' .implode("|",$res));
 					}
 				break;
 			}
