@@ -156,7 +156,7 @@ class WalletOrderController extends BaseController
 					try{
 						sendCurl($order_uri, $order_param, null, 'POST');
 					} catch (\Exception $e) {
-						throw new \Exception('创建订单失败,'.$order_uri);
+						throw new \Exception('调用'.$order_uri.'接口失败!');
 					}
 
 					// 发起交易
