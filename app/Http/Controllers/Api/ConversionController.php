@@ -30,7 +30,7 @@ class ConversionController extends BaseController
 			->ofUserId($this->user->id)
 			->whereIn('id', $wallets)
 			->get()->each(function ($val){
-				if(! $ico_name = $val->category->icoInfo ? $val->category->icoInfo->name : null){
+				if(! $ico_name = !empty($val->category->icoInfo) ? $val->category->icoInfo->name : null){
 					\Log::info('获取'.$val->category->name.'的API名称失败!');
 				}
 				$val->category->cap = \PriceCoinmarketcap::getPrice($ico_name) ?: null;
