@@ -31,7 +31,7 @@ class ConversionController extends BaseController
 			->whereIn('id', $wallets)
 			->get()->each(function ($val){
 				if(! $ico_name = !empty($val->category->icoInfo) ? $val->category->icoInfo->name : null){
-					\Log::info('获取'.$val->category->name.'的API名称失败!');
+					\Log::info('获取'.$val->category->name.'的API名称失败,请检查ico_list表中是否存在!');
 				}
 				$val->category->cap = \PriceCoinmarketcap::getPrice($ico_name) ?: null;
 				//钱包余额
@@ -55,7 +55,7 @@ class ConversionController extends BaseController
 				// dd($record->gnt->toArray());
 				$list = $record->gnt->each(function ($val) use ($record) {
 					if(! $ico_name = !empty($val->category->icoInfo) ? $val->category->icoInfo->name : null){
-						\Log::info('获取'.$val->gntCategory->name.'的API名称失败!');
+						\Log::info('获取'.$val->gntCategory->name.'的API名称失败,请检查ico_list表中是否存在!');
 					}
 					$val->gntCategory->cap = \PriceCoinmarketcap::getPrice($ico_name) ?: null;
 					$uri   = env('API_URL',config('user_config.unichain_url')) . '/eth/tokens/balanceOf';
