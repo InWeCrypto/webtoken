@@ -54,7 +54,7 @@ class ConversionController extends BaseController
 			case 'eth':
 				// dd($record->gnt->toArray());
 				$list = $record->gnt->each(function ($val) use ($record) {
-					if(! $ico_name = $val->category->icoInfo ? $val->category->icoInfo->name : null){
+					if(! $ico_name = !empty($val->category->icoInfo) ? $val->category->icoInfo->name : null){
 						\Log::info('获取'.$val->gntCategory->name.'的API名称失败!');
 					}
 					$val->gntCategory->cap = \PriceCoinmarketcap::getPrice($ico_name) ?: null;
