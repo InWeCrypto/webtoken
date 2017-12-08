@@ -69,7 +69,7 @@ class WalletOrderController extends BaseController
 				$url = env('TRADER_WALLET_URL_NEO', config('user_config.api_url')) . '/orders';
 				$url.= '/'.$wallet->address;
 				$url.= '/'.$asset_id;
-				$url.= '/'.$request->get('offset', 0);
+				$url.= '/'.$request->get('offset', $request->get('page', 0));
 				$url.= '/'.$request->get('size', 10);
 				$list = sendCurl($url); 
 			break;
@@ -166,6 +166,7 @@ class WalletOrderController extends BaseController
 						'from' => $request->get('pay_address'),
 						'to' => $request->get('receive_address'),
 						'value' => $request->get('fee'),
+						'remark' => $request->get('remark'),
 					];
 					// 返回200就算成功
 					// 失败就直接throw
