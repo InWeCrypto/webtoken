@@ -30,8 +30,8 @@ class ConversionController extends BaseController
 			->ofUserId($this->user->id)
 			->whereIn('id', $wallets)
 			->get()->each(function ($val){
-				if(! $ico_name = $val->category->icoInfo ? $val->category->icoInfo->name : null){
-					\Log::info('获取'.$val->category->name.'的API名称失败!');
+				if(! $ico_name = !empty($val->category->icoInfo) ? $val->category->icoInfo->name : null){
+					\Log::info('获取'.$val->category->name.'的API名称失败,请检查ico_list表中是否存在!');
 				}
 				$val->category->cap = \PriceCoinmarketcap::getPrice($ico_name) ?: null;
 				//钱包余额
@@ -48,23 +48,22 @@ class ConversionController extends BaseController
 	public function show($walletId)
 	{
 		// $record = Wallet::with('gnt.gntCategory.icoInfo')->findOrFail($walletId);
-		$record = Wallet::with('gnt.gntCategory')->ofUserId($this->user->id)->findOrFail($walletId);
+		$record = Wallet::with('gnt.gntCategory.icoInfo')->ofUserId($this->user->id)->findOrFail($walletId);
 		//测算价值
 		switch(strtolower($record->category->name)){
 			case 'eth':
-				// dd($record->gnt->toArray());
 				$list = $record->gnt->each(function ($val) use ($record) {
-					if(! $ico_name = $val->category->icoInfo ? $val->category->icoInfo->name : null){
-						\Log::info('获取'.$val->gntCategory->name.'的API名称失败!');
+					if(! $ico_name = !empty($val->gntCategory->icoInfo) ? $val->gntCategory->icoInfo->name : null){
+						\Log::info('获取'.$val->gntCategory->name.'的API名称失败,请检查ico_list表中是否存在!');
 					}
 					$val->gntCategory->cap = \PriceCoinmarketcap::getPrice($ico_name) ?: null;
-					// $uri   = env('API_URL',config('user_config.unichain_url')) . '/eth/tokens/balanceOf';
-					// $param = [
-					// 	'contract' => $val->gntCategory->address,
-					// 	'address' => $record->address
-					// ];
-					// // $res = sendCurl($uri, $param, null, 'POST');
-					// // $val->balance = $res['value'];
+					$uri   = env('API_URL',config('user_config.unichain_url')) . '/eth/tokens/balanceOf';
+					$param = [
+						'contract' => $val->gntCategory->address,
+						'address' => $record->address
+					];
+					$res = sendCurl($uri, $param, null, 'POST');
+					$val->balance = $res['value'];
 				})->sortByDesc('updated_at')->values()->all();
 			break;
 			case 'neo':
