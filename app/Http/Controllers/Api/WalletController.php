@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 
 use App\Model\Wallet;
+use App\Model\WalletCategory;
 use Illuminate\Http\Request;
 
 /**
@@ -43,6 +44,7 @@ class WalletController extends BaseController
 			return fail('', '该钱包地址已存在');
 		}
 		try {
+			// 检测钱包地址是否合法并调用消息推送接口
 			$this->checkAddress($request->get('category_id'), $request->get('address'));
 		} catch (\Exception $e) {
 			\Log::info($e->getMessage().', 请求原数据:'.json_encode($request->all()));
@@ -78,14 +80,25 @@ class WalletController extends BaseController
 	{
 		$wallet  = Wallet::ofUserId($this->user->id)->findOrFail($id);
 		$address = $wallet->address;
-		
-		$wallet_message_url = env('TRADER_WALLET_URL_NEO', config('user_config.unichain_url')) . '/wallet/' .$this->user->open_id . '/' . $address;
+
+		$category_name = WalletCategory::findOrFail($wallet->category_id)->name;
+		// 删除钱包消息推送
+		switch (strtolower($category_name)) {
+			case 'eth':
+				$wallet_message_url = env('TRADER_WALLET_URL_ETH') . '/wallet/' .$this->user->open_id . '/' . $address;
+				break;
+			case 'neo':
+				$wallet_message_url = env('TRADER_WALLET_URL_NEO') . '/wallet/' .$this->user->open_id . '/' . $address;
+				break;
+			default:
+				break;
+		}
 		sendCurl($wallet_message_url, [], null, 'DELETE');
 		return $wallet->delete() ? success() : fail();
 	}
 
 	/**
-	 * 
+	 *
 	 * @return bool
 	 */
 	private function checkAddress($category_id, $address)
@@ -99,6 +112,12 @@ class WalletController extends BaseController
 							compact('address'),
 							null,
 							'POST');
+				if(!empty($result['message'])){
+					throw new \Exception('不是有效的eth钱包地址!');
+				}
+				// 钱包消息推送
+				$wallet_message_url = env('TRADER_WALLET_URL_NEO'). '/wallet/' . $this->user->open_id . '/' . $address;
+				sendCurl($wallet_message_url, [], null, 'POST');
 				break;
 			case 'neo':
 				$result = sendCurl(

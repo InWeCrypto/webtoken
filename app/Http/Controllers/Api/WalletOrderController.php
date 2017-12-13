@@ -71,7 +71,7 @@ class WalletOrderController extends BaseController
 				$url.= '/'.$asset_id;
 				$url.= '/'.$request->get('offset', $request->get('page', 0));
 				$url.= '/'.$request->get('size', 10);
-				$list = sendCurl($url); 
+				$list = sendCurl($url);
 			break;
 		}
 
@@ -108,39 +108,68 @@ class WalletOrderController extends BaseController
 		try {
 			switch(strtolower($request->get('flag'))){
 				case 'eth':
-					$block_number_uri = env('API_URL', config('user_config.api_url')) . '/eth/blockNumber';
-					$res              = sendCurl($block_number_uri, [], [], 'get');
-					$request['block_number'] = hexdec($res['value']);
-					//hash
+					if(!$asset_id = $request->get('asset_id')){
+						throw new \Exception('ETH 请求接口,请传入转账资产类型ID!');
+					}
+					// $block_number_uri = env('API_URL', config('user_config.api_url')) . '/eth/blockNumber';
+					// $res              = sendCurl($block_number_uri, [], [], 'get');
+					// $request['block_number'] = hexdec($res['value']);
+					// //hash
 					$send_raw_transaction_uri   = env('API_URL', config('user_config.api_url')) . '/eth/sendRawTransaction';
 					$send_raw_transaction_param = [
 						'data' => $request->get('data')
 					];
 					$res = sendCurl($send_raw_transaction_uri, $send_raw_transaction_param, [], 'post');
-					$request['trade_no'] = $request['hash'] = $res['txHash'];
-					$sec = Wallet::where('address', $request->get('receive_address'))->first();
-					DB::transaction(function () use ($request, $sec) {
-						WalletOrder::create([
-							'user_id' => $this->user->id,
-							'own_address' => $request->get('pay_address')
-							] + $request->all()
-						);
-						if ($sec) {
-							WalletOrder::create([
-								'user_id' => $sec->user_id,
-								'own_address' => $request->get('receive_address'),
-								'wallet_id' => $sec->id
-								] + $request->except('wallet_id')
-							);
-						}
-					});
+					if(empty($res['txHash'])){
+						throw new \Exception('ETH 请求借口,发起交易失败!'. implode('|', $res));
+					}
+					$trade_no = $res['txHash'];
+					$content = [
+						'remark' => $request->get('remark'),
+						'handle_fee' => $request->get('handle_fee')
+					];
+					// 调用eth创建订单接口
+					$order_uri   = env('TRADER_WALLET_URL_ETH') . '/order';
+					$order_param = [
+						'tx' => $trade_no,
+						'asset' => $asset_id,
+						'from' => $request->get('pay_address'),
+						'to' => $request->get('receive_address'),
+						'value' => $request->get('fee'),
+						'content' => $content,
+					];
+					// 返回200就算成功
+					// 失败就直接throw
+					try{
+						sendCurl($order_uri, $order_param, null, 'POST');
+					} catch (\Exception $e) {
+						throw new \Exception('调用'.$order_uri.'接口失败!');
+					}
+
+					// $request['trade_no'] = $request['hash'] = $res['txHash'];
+					// $sec = Wallet::where('address', $request->get('receive_address'))->first();
+					// DB::transaction(function () use ($request, $sec) {
+					// 	WalletOrder::create([
+					// 		'user_id' => $this->user->id,
+					// 		'own_address' => $request->get('pay_address')
+					// 		] + $request->all()
+					// 	);
+					// 	if ($sec) {
+					// 		WalletOrder::create([
+					// 			'user_id' => $sec->user_id,
+					// 			'own_address' => $request->get('receive_address'),
+					// 			'wallet_id' => $sec->id
+					// 			] + $request->except('wallet_id')
+					// 		);
+					// 	}
+					// });
 				break;
 				case 'neo':
 					if(!$trade_no = $request->get('trade_no')){
 						throw new \Exception('NEO 请求接口,请填写订单号!');
 					}
 					if(!$asset_id = $request->get('asset_id')){
-						throw new \Exception('NEO 请求接口,转账资产类型ID!');
+						throw new \Exception('NEO 请求接口,请传入转账资产类型ID!');
 					}
 
 					// 发起交易
@@ -157,7 +186,7 @@ class WalletOrderController extends BaseController
 					if(empty($res['result'])){
 						throw new \Exception('NEO 请求接口,发起交易失败!' .implode("|",$res));
 					}
-					
+
 					// 调用Neo创建订单接口
 					$order_uri   = env('TRADER_WALLET_URL_NEO', config('user_config.api_url')) . '/order';
 					$order_param = [
