@@ -33,33 +33,65 @@ class WalletOrderController extends BaseController
 		$flag     = strtoupper($request->get('flag', 'ETH'));
 		switch(strtolower($flag)){
 			case 'eth':
-				/**
-				 * 更新订单状态
-				 */
-				updateOrderStatus();
-				// $type = $request->get('type', 1);
-				// if (1 == $type) {
-				// 	$query = WalletOrder::ofFlag($request->get('flag','ETH'))->ofUserId($this->user->id)->ofWalletId($walletId);
-				// } else {
-				// 	$query = WalletOrder::ofFlag($request->get('flag','ETH'))->whereHas('relationReceiveWallet', function ($query) use ($walletId) {
-				// 		$query->ofUserId($this->user->id)->where('id', $walletId);
-				// 	});
-				// }
-				// $query = WalletOrder::ofFlag($request->get('flag', 'ETH'))->where(function ($query) use ($walletId) {
-				// 	$query->where(function ($query) use ($walletId) {
-				// 		$query->ofUserId($this->user->id)->ofWalletId($walletId);
-				// 	})->orWhere(function ($query) use ($walletId) {
-				// 		$query->whereHas('relationReceiveWallet', function ($query) use ($walletId) {
-				// 			$query->ofUserId($this->user->id)->where('id', $walletId);
-				// 		});
-				// 	});
-				// });
-				$query = WalletOrder::ofFlag($flag)->whereHas('relationWallet', function ($query) use ($walletId) {
-					$query->ofUserId($this->user->id)->where('id', $walletId);
-				});
+				$wallet = Wallet::ofUserId($this->user->id)->findOrFail($walletId);
+				if(!$asset_id = $request->get('asset_id')){
+					throw new \Exception('请填写 NEO ASSET ID');
+				}
+				$wallet = Wallet::ofUserId($this->user->id)->findOrFail($walletId);
+				$url = env('TRADER_WALLET_URL_ETH', config('user_config.api_url')) . '/orders';
+				$url.= '/'.$wallet->address;
+				$url.= '/'.$asset_id;
+				$url.= '/'.$request->get('offset', $request->get('page', 0));
+				$url.= '/'.$request->get('size', 10);
+				$res = sendCurl($url);
 
-				$list = $query->latest()->simplePaginate($request->get('per_page'))->toArray();
-				$list = $list['data'];
+				$list = [];
+				foreach($res as $v){
+					$temp = [
+						'trade_no' => $v['tx'],
+						'hash' => $v['tx'],
+						'pay_address' => $v['from'],
+						'receive_address' => $v['to'],
+						'block_number' => $v['blocks'],
+						'fee' => $v['value'],
+						'status' => empty($v['confirm_time']) ? 0 : 1,
+						'created_at' => $v['createTime']
+					];
+					$cont = json_decode($v['context'], true) ?: [];
+					$list[] = array_merge($cont, $temp);
+				}
+
+
+
+
+				// 下面代码是之前订单存取在数据库的代码
+				// /**
+				//  * 更新订单状态
+				//  */
+				// updateOrderStatus();
+				// // $type = $request->get('type', 1);
+				// // if (1 == $type) {
+				// // 	$query = WalletOrder::ofFlag($request->get('flag','ETH'))->ofUserId($this->user->id)->ofWalletId($walletId);
+				// // } else {
+				// // 	$query = WalletOrder::ofFlag($request->get('flag','ETH'))->whereHas('relationReceiveWallet', function ($query) use ($walletId) {
+				// // 		$query->ofUserId($this->user->id)->where('id', $walletId);
+				// // 	});
+				// // }
+				// // $query = WalletOrder::ofFlag($request->get('flag', 'ETH'))->where(function ($query) use ($walletId) {
+				// // 	$query->where(function ($query) use ($walletId) {
+				// // 		$query->ofUserId($this->user->id)->ofWalletId($walletId);
+				// // 	})->orWhere(function ($query) use ($walletId) {
+				// // 		$query->whereHas('relationReceiveWallet', function ($query) use ($walletId) {
+				// // 			$query->ofUserId($this->user->id)->where('id', $walletId);
+				// // 		});
+				// // 	});
+				// // });
+				// $query = WalletOrder::ofFlag($flag)->whereHas('relationWallet', function ($query) use ($walletId) {
+				// 	$query->ofUserId($this->user->id)->where('id', $walletId);
+				// });
+                //
+				// $list = $query->latest()->simplePaginate($request->get('per_page'))->toArray();
+				// $list = $list['data'];
 			break;
 			case 'neo':
 				if(!$asset_id = $request->get('asset_id')){
@@ -124,7 +156,7 @@ class WalletOrderController extends BaseController
 						throw new \Exception('ETH 请求借口,发起交易失败!'. implode('|', $res));
 					}
 					$trade_no = $res['txHash'];
-					$content = [
+					$context = [
 						'remark' => $request->get('remark'),
 						'handle_fee' => $request->get('handle_fee')
 					];
@@ -136,7 +168,7 @@ class WalletOrderController extends BaseController
 						'from' => $request->get('pay_address'),
 						'to' => $request->get('receive_address'),
 						'value' => $request->get('fee'),
-						'content' => json_encode($content),
+						'context' => json_encode($context),
 					];
 					// 返回200就算成功
 					// 失败就直接throw
