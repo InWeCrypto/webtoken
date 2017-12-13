@@ -136,7 +136,7 @@ class WalletOrderController extends BaseController
 						'from' => $request->get('pay_address'),
 						'to' => $request->get('receive_address'),
 						'value' => $request->get('fee'),
-						'content' => $content,
+						'content' => json_encode($content),
 					];
 					// 返回200就算成功
 					// 失败就直接throw
