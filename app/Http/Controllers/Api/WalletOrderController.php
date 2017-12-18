@@ -46,6 +46,7 @@ class WalletOrderController extends BaseController
 				$res = sendCurl($url);
 
 				$list = [];
+
 				foreach($res as $v){
 					$temp = [
 						'trade_no' => $v['tx'],
@@ -54,13 +55,13 @@ class WalletOrderController extends BaseController
 						'receive_address' => $v['to'],
 						'block_number' => $v['blocks'],
 						'fee' => $v['value'],
-						'status' => empty($v['confirm_time']) ? 0 : 1,
+						'status' => empty($v['confirmTime']) ? 0 : 1,
 						'created_at' => $v['createTime']
 					];
-                    
+
                     $cont = !empty($v['context']) ? json_decode($v['context'], true) : [
                         "remark" => "",
-                        "handle_fee" => "0.00192573"
+                        "handle_fee" => "1925730000000000"
                     ];
 
 					$list[] = array_merge($cont, $temp);
