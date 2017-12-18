@@ -58,7 +58,7 @@ class WalletOrderController extends BaseController
 						'created_at' => $v['createTime']
 					];
                     $cont = !empty($v['context']) ? $v['context'] : [
-                        "remark" => "",
+                        "remark" => "", 
                         "handle_fee" => "0.00192573"
                     ];
 					$cont = json_decode($cont, true);
