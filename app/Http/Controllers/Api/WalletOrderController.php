@@ -57,7 +57,11 @@ class WalletOrderController extends BaseController
 						'status' => empty($v['confirm_time']) ? 0 : 1,
 						'created_at' => $v['createTime']
 					];
-					$cont = json_decode($v['context'], true) ?: [];
+                    $cont = !empty($v['context']) ? $v['context'] : [
+                        "remark" => "",
+                        "handle_fee" => "0.00192573"
+                    ];
+					$cont = json_decode($cont ?: , true);
 					$list[] = array_merge($cont, $temp);
 				}
 
