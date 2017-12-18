@@ -61,7 +61,7 @@ class WalletOrderController extends BaseController
                         "remark" => "",
                         "handle_fee" => "0.00192573"
                     ];
-					$cont = json_decode($cont ?: , true);
+					$cont = json_decode($cont, true);
 					$list[] = array_merge($cont, $temp);
 				}
 
