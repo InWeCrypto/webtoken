@@ -98,7 +98,7 @@ class WalletOrderController extends BaseController
                 }
 			break;
             default :
-                \Log::info($request->get('flag') . '代币不存在,请检查gnt_category表!请求数据:'. json_encode($request->all()));
+                \Log::info($request->get('flag') . '代币不存在,订单列表,请检查gnt_category表!请求数据:'. json_encode($request->all()));
 		}
 		return success(compact('list'));
 	}
@@ -131,15 +131,22 @@ class WalletOrderController extends BaseController
 			"flag.required" => '请填写钱包/代币类型:如eth',
 		]);
 		try {
-			switch(strtolower($request->get('flag'))){
+            $flag = $request->get('flag');
+            /**
+            * 获取代币订单记录,所属的接口
+            **/
+            if($gnt_temp = GntCategory::with('walletCategory')->where('name', strtoupper($flag))->first()){
+                if(!empty($gnt_temp->walletCategory) && !empty($gnt_temp->walletCategory->name)){
+                    $flag = $gnt_temp->walletCategory->name;
+                }
+            }
+
+			switch(strtolower($flag)){
 				case 'eth':
 					if(!$asset_id = $request->get('asset_id')){
 						throw new \Exception('ETH 请求接口,请传入转账资产类型ID!');
 					}
-					// $block_number_uri = env('API_URL', config('user_config.api_url')) . '/eth/blockNumber';
-					// $res              = sendCurl($block_number_uri, [], [], 'get');
-					// $request['block_number'] = hexdec($res['value']);
-					// //hash
+
 					$send_raw_transaction_uri   = env('API_URL', config('user_config.api_url')) . '/eth/sendRawTransaction';
 					$send_raw_transaction_param = [
 						'data' => $request->get('data')
@@ -171,23 +178,6 @@ class WalletOrderController extends BaseController
 						throw new \Exception('调用'.$order_uri.'接口失败!');
 					}
 
-					// $request['trade_no'] = $request['hash'] = $res['txHash'];
-					// $sec = Wallet::where('address', $request->get('receive_address'))->first();
-					// DB::transaction(function () use ($request, $sec) {
-					// 	WalletOrder::create([
-					// 		'user_id' => $this->user->id,
-					// 		'own_address' => $request->get('pay_address')
-					// 		] + $request->all()
-					// 	);
-					// 	if ($sec) {
-					// 		WalletOrder::create([
-					// 			'user_id' => $sec->user_id,
-					// 			'own_address' => $request->get('receive_address'),
-					// 			'wallet_id' => $sec->id
-					// 			] + $request->except('wallet_id')
-					// 		);
-					// 	}
-					// });
 				break;
 				case 'neo':
 					if(!$trade_no = $request->get('trade_no')){
@@ -236,6 +226,10 @@ class WalletOrderController extends BaseController
 						throw new \Exception('调用'.$order_uri.'接口失败!');
 					}
 				break;
+
+                default :
+                    \Log::info($request->get('flag') . '代币不存在,创建订单,请检查gnt_category表!请求数据:'. json_encode($request->all()));
+                    throw new \Exception($request->get('flag'). '代币不存在!');
 			}
 			return success();
 
@@ -243,21 +237,6 @@ class WalletOrderController extends BaseController
 			Log::info('创建订单失败!'. '订单原始数据:' . json_encode($request->all()).',错误原因:' . $e->getMessage() );
 			throw $e;
 		}
-
-//		try {
-//			DB::beginTransaction();
-//			WalletOrder::create(['user_id' => $this->user->id, 'own_address' => $request->get('pay_address')] + $request->all());
-//			if ($sec = Wallet::where('address', $request->get('receive_address'))->first()) {
-//				WalletOrder::create(['user_id' => $sec->user_id, 'own_address' => $request->get('receive_address'), 'wallet_id' => $sec->id] + $request->except('wallet_id'));
-//
-//			}
-//			DB::commit();
-//			return success();
-//		} catch (\Exception $e) {
-//			Log::error('add order err:' . $e->getMessage());
-//			DB::rollBack();
-//			throw $e;
-//		}
 
 	}
 
