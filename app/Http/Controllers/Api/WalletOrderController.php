@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Model\Wallet;
 use App\Model\WalletOrder;
+use App\Model\GntCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -30,10 +31,18 @@ class WalletOrderController extends BaseController
 			"flag.required" => '请填写钱包/代币类型:如eth',
 		]);
 		$walletId = $request->get('wallet_id');
-		$flag     = strtoupper($request->get('flag', 'ETH'));
+		$flag     = strtoupper($request->get('flag'));
+
+        /**
+        * 获取代币订单记录,所属的接口
+        **/
+        if($gnt_temp = GntCategory::with('walletCategory')->where('name', strtoupper($flag))->first()){
+            if(!empty($gnt_temp->walletCategory) && !empty($gnt_temp->walletCategory->name)){
+                $flag = $gnt_temp->walletCategory->name;
+            }
+        }
 		switch(strtolower($flag)){
 			case 'eth':
-				$wallet = Wallet::ofUserId($this->user->id)->findOrFail($walletId);
 				if(!$asset_id = $request->get('asset_id')){
 					throw new \Exception('请填写 NEO ASSET ID');
 				}
@@ -66,38 +75,6 @@ class WalletOrderController extends BaseController
 
 					$list[] = array_merge($cont, $temp);
 				}
-
-
-
-
-				// 下面代码是之前订单存取在数据库的代码
-				// /**
-				//  * 更新订单状态
-				//  */
-				// updateOrderStatus();
-				// // $type = $request->get('type', 1);
-				// // if (1 == $type) {
-				// // 	$query = WalletOrder::ofFlag($request->get('flag','ETH'))->ofUserId($this->user->id)->ofWalletId($walletId);
-				// // } else {
-				// // 	$query = WalletOrder::ofFlag($request->get('flag','ETH'))->whereHas('relationReceiveWallet', function ($query) use ($walletId) {
-				// // 		$query->ofUserId($this->user->id)->where('id', $walletId);
-				// // 	});
-				// // }
-				// // $query = WalletOrder::ofFlag($request->get('flag', 'ETH'))->where(function ($query) use ($walletId) {
-				// // 	$query->where(function ($query) use ($walletId) {
-				// // 		$query->ofUserId($this->user->id)->ofWalletId($walletId);
-				// // 	})->orWhere(function ($query) use ($walletId) {
-				// // 		$query->whereHas('relationReceiveWallet', function ($query) use ($walletId) {
-				// // 			$query->ofUserId($this->user->id)->where('id', $walletId);
-				// // 		});
-				// // 	});
-				// // });
-				// $query = WalletOrder::ofFlag($flag)->whereHas('relationWallet', function ($query) use ($walletId) {
-				// 	$query->ofUserId($this->user->id)->where('id', $walletId);
-				// });
-                //
-				// $list = $query->latest()->simplePaginate($request->get('per_page'))->toArray();
-				// $list = $list['data'];
 			break;
 			case 'neo':
 				if(!$asset_id = $request->get('asset_id')){
@@ -109,10 +86,20 @@ class WalletOrderController extends BaseController
 				$url.= '/'.$asset_id;
 				$url.= '/'.$request->get('offset', $request->get('page', 0));
 				$url.= '/'.$request->get('size', 10);
-				$list = sendCurl($url);
-			break;
-		}
+                $res = sendCurl($url);
 
+                $list = [];
+                foreach ($res as $v) {
+                    $cont = !empty($v['context']) ? json_decode($v['context'], true) : [
+                        "remark" => "",
+                        "handle_fee" => "0"
+                    ];
+                    $list[] = array_merge($v, $cont);
+                }
+			break;
+            default :
+                \Log::info($request->get('flag') . '代币不存在,请检查gnt_category表!请求数据:'. json_encode($request->all()));
+		}
 		return success(compact('list'));
 	}
 
@@ -164,7 +151,7 @@ class WalletOrderController extends BaseController
 					$trade_no = $res['txHash'];
 					$context = [
 						'remark' => $request->get('remark'),
-						'handle_fee' => $request->get('handle_fee')
+						'handle_fee' => $request->get('handle_fee', '1925730000000000')
 					];
 					// 调用eth创建订单接口
 					$order_uri   = env('TRADER_WALLET_URL_ETH') . '/order';
@@ -227,13 +214,19 @@ class WalletOrderController extends BaseController
 
 					// 调用Neo创建订单接口
 					$order_uri   = env('TRADER_WALLET_URL_NEO', config('user_config.api_url')) . '/order';
+
+                    $context = [
+						'remark' => $request->get('remark'),
+						'handle_fee' => $request->get('handle_fee', 0)
+					];
+
 					$order_param = [
 						'tx' => $trade_no,
 						'asset' => $asset_id,
 						'from' => $request->get('pay_address'),
 						'to' => $request->get('receive_address'),
 						'value' => $request->get('fee'),
-						'remark' => $request->get('remark'),
+						'context' => json_encode($context),
 					];
 					// 返回200就算成功
 					// 失败就直接throw

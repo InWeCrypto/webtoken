@@ -46,7 +46,7 @@ $router->group(['namespace' => 'Api'], function ($router) {
 		});
 		$router->resource('message', 'MessageController');
 		$router->resource('conversion', 'ConversionController');
-//		$router->resource('sts', 'StsController');
+		// $router->resource('sts', 'StsController');
 		$router->resource('user-wallet', 'UserWalletCategoryController');
 		$router->resource('gnt-category', 'GntCategoryController');
 		$router->resource('user-gnt', 'UserGntCategoryController');
