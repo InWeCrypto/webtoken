@@ -64,7 +64,7 @@ class WalletOrderController extends BaseController
 						'receive_address' => $v['to'],
 						'block_number' => $v['blocks'],
 						'fee' => $v['value'],
-						'status' => empty($v['confirmTime']) ? 0 : 1,
+						'confirm_at' => !empty($v['confirmTime']) ? $v['confirmTime'] : "",
 						'created_at' => $v['createTime']
 					];
 
@@ -147,6 +147,15 @@ class WalletOrderController extends BaseController
 						throw new \Exception('ETH 请求接口,请传入转账资产类型ID!');
 					}
 
+                    try {
+                        $block_number_uri = env('API_URL', config('user_config.api_url')) . '/eth/blockNumber';
+    					$res              = sendCurl($block_number_uri, [], [], 'get');
+    					$block_number     = hexdec($res['value']);
+                    } catch (\Exception $e) {
+                        \Log::info('获取块高失败');
+                        throw new \Exception('获取块高失败,'.$block_number_uri.'接口失败!');
+                    }
+
 					$send_raw_transaction_uri   = env('API_URL', config('user_config.api_url')) . '/eth/sendRawTransaction';
 					$send_raw_transaction_param = [
 						'data' => $request->get('data')
@@ -168,6 +177,7 @@ class WalletOrderController extends BaseController
 						'from' => $request->get('pay_address'),
 						'to' => $request->get('receive_address'),
 						'value' => $request->get('fee'),
+                        'blocks' => $block_number,
 						'context' => json_encode($context),
 					];
 					// 返回200就算成功
@@ -175,7 +185,7 @@ class WalletOrderController extends BaseController
 					try{
 						sendCurl($order_uri, $order_param, null, 'POST');
 					} catch (\Exception $e) {
-						throw new \Exception('调用'.$order_uri.'接口失败!');
+                        throw new \Exception('调用'.$order_uri.'接口失败!');
 					}
 
 				break;
@@ -228,7 +238,7 @@ class WalletOrderController extends BaseController
 				break;
 
                 default :
-                    \Log::info($request->get('flag') . '代币不存在,创建订单,请检查gnt_category表!请求数据:'. json_encode($request->all()));
+                    \Log::info($request->get('flag') . '代币不存在,创建订单失败,请检查gnt_category表!请求数据:'. json_encode($request->all()));
                     throw new \Exception($request->get('flag'). '代币不存在!');
 			}
 			return success();

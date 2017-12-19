@@ -630,11 +630,12 @@ if (!function_exists('sendCurl')) {
 		curl_close($ch);
 		if ($httpCode != 200) {
 			$msg = $err ? $err : $httpCode . '请求第三方服务器失败';
-			if($result && $result['message']){
+			if($result && !empty($result['message'])){
 				$msg = $result['message'];
 			}
-			\Illuminate\Support\Facades\Log::info($msg);
-			throw new \Exception($msg);
+            $msg = $msg ?: $res;
+			\Illuminate\Support\Facades\Log::info($url.'---'.$msg);
+			throw new \Exception($url .'---'. $msg);
 		}
 		return $result || $res == '[]' ? $result : $res;
 	}
