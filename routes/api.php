@@ -42,7 +42,9 @@ $router->group(['namespace' => 'Api'], function ($router) {
 			$router->any('address', 'ExtendController@address');
 			$router->any('getNeoUtxo', 'ExtendController@getNeoUtxo');
 			$router->any('getNeoClaimUtxo', 'ExtendController@getNeoClaimUtxo');
-			$router->any('getNeoOrderStatus', 'ExtendController@getNeoOrderStatus');
+            $router->any('getNeoOrderStatus', 'ExtendController@getNeoOrderStatus');
+
+			$router->any('getNeoGntInfo', 'ConversionController@getNeoGntInfo');
 		});
 		$router->resource('message', 'MessageController');
 		$router->resource('conversion', 'ConversionController');

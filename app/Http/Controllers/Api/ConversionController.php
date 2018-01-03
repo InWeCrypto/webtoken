@@ -183,6 +183,18 @@ class ConversionController extends BaseController
         }
         return $return;
     }
+
+    // 单独获取NEO通用信息
+    public function getNeoGntInfo(Request $request){
+        $this->validate($request, [
+			'address' => 'required'
+		]);
+        $address = $request->get('address');
+        $return = [];
+        $return['decimals'] = $this->getNeoGntDecimals($address);
+        $return['symbol'] = $this->getNeoGntSymbol($address);
+        return success($return);
+    }
     /**
     * 缓存neo代币小数位数
     * @param string $address 合约地址
