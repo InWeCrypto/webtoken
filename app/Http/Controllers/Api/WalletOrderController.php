@@ -92,7 +92,8 @@ class WalletOrderController extends BaseController
                 foreach ($res as $v) {
                     $cont = !empty($v['context']) ? json_decode($v['context'], true) : [
                         "remark" => "",
-                        "handle_fee" => "0"
+                        "handle_fee" => "0",
+                        "is_token"=>"0"
                     ];
                     $list[] = array_merge($v, $cont);
                 }
@@ -217,7 +218,8 @@ class WalletOrderController extends BaseController
 
                     $context = [
 						'remark' => $request->get('remark'),
-						'handle_fee' => $request->get('handle_fee', 0)
+						'handle_fee' => $request->get('handle_fee', 0),
+                        'is_token' => $request->get('is_token', 0),
 					];
 
 					$order_param = [
