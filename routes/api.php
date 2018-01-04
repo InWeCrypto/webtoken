@@ -44,7 +44,8 @@ $router->group(['namespace' => 'Api'], function ($router) {
 			$router->any('getNeoClaimUtxo', 'ExtendController@getNeoClaimUtxo');
             $router->any('getNeoOrderStatus', 'ExtendController@getNeoOrderStatus');
 
-			$router->any('getNeoGntInfo', 'ConversionController@getNeoGntInfo');
+            $router->any('getNeoGasCost', 'ExtendController@getNeoGasCost');
+            $router->any('getNeoGntInfo', 'ConversionController@getNeoGntInfo');
 		});
 		$router->resource('message', 'MessageController');
 		$router->resource('conversion', 'ConversionController');
