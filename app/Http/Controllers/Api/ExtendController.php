@@ -319,8 +319,40 @@ class ExtendController extends BaseController
 
         } catch (\Exception $e) {
             \Log::info('获取转账GAS费用失败!'. json_encode($request->all()));
-            
+
             return fail('获取转账GAS费用失败!');
+        }
+
+        return isset($res['result']['gas_consumed']) ? success(['gas_consumed'=>$res['result']['gas_consumed']]) : fail('获取转账GAS费用失败!');
+    }
+
+    // 获取ico gas费用
+    public function getIcoGasCost(Request $request){
+        $this->validate($request, [
+            'treaty_address' => 'required',
+        ]);
+
+        $treaty_address = $request->get('treaty_address');
+
+
+        $uri = env('TRADER_URL_NEO',config('user_config.unichain_url'));
+        $param = [
+            'jsonrpc' => "2.0",
+            'method' => "invokefunction",
+            'params' => [
+                $treaty_address, // 合约地址
+                'mintTokens',
+                [
+                ]
+            ],
+            'id' =>3
+        ];
+        try {
+            $res = sendCurl($uri, $param, null, 'POST');
+        } catch (\Exception $e) {
+            \Log::info('获取ICO GAS费用失败!'. json_encode($request->all()));
+
+            return fail('获取ICO GAS费用失败!');
         }
 
         return isset($res['result']['gas_consumed']) ? success(['gas_consumed'=>$res['result']['gas_consumed']]) : fail('获取转账GAS费用失败!');
