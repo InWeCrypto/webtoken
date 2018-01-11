@@ -162,7 +162,7 @@ class ConversionController extends BaseController
             'jsonrpc' => "2.0",
             'method' => "invokefunction",
             'params' => [
-                ltrim($c_address, '0x'), // 合约地址
+                str_replace('0x', '', $address), // 合约地址,
                 'balanceOf',
                 [
                     [
@@ -201,7 +201,7 @@ class ConversionController extends BaseController
     */
     public function getNeoGntDecimals($address){
         $return = null;
-        $address = ltrim($address, '0x'); // 合约地址,
+        $address = str_replace('0x', '', $address); // 合约地址,
         $cache_key = 'KEY:NEO_GNT:DECIMALS:'.$address;
         try {
             if(\Redis::exists($cache_key)){
@@ -224,6 +224,7 @@ class ConversionController extends BaseController
             }
             // 写入到redis缓存
             \Redis::set($cache_key, $return);
+            \Redis::expire($cache_key, 60 * 5 ); // 5分钟
         } catch (\Exception $e) {
             \Log::info('获取neo代币小数位数失败!'.$address);
         }
@@ -236,7 +237,7 @@ class ConversionController extends BaseController
     */
     public function getNeoGntSymbol($address){
         $return = null;
-        $address = ltrim($address, '0x'); // 合约地址,
+        $address = str_replace('0x', '', $address); // 合约地址,
         $cache_key = 'KEY:NEO_GNT:SYMBOL:'.$address;
         try {
             if(\Redis::exists($cache_key)){
@@ -260,6 +261,7 @@ class ConversionController extends BaseController
             $return = Hex2String($return);
             // 写入到redis缓存
             \Redis::set($cache_key, $return);
+            \Redis::expire($cache_key, 60 * 5 ); // 5分钟
         } catch (\Exception $e) {
             \Log::info('获取neo代币符号失败!'.$address);
         }
