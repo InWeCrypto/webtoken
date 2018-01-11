@@ -162,7 +162,7 @@ class ConversionController extends BaseController
             'jsonrpc' => "2.0",
             'method' => "invokefunction",
             'params' => [
-                ltrim($c_address, '0x'), // 合约地址
+                str_replace('0x', '', $address), // 合约地址,
                 'balanceOf',
                 [
                     [
@@ -201,7 +201,7 @@ class ConversionController extends BaseController
     */
     public function getNeoGntDecimals($address){
         $return = null;
-        $address = ltrim($address, '0x'); // 合约地址,
+        $address = str_replace('0x', '', $address); // 合约地址,
         $cache_key = 'KEY:NEO_GNT:DECIMALS:'.$address;
         try {
             if(\Redis::exists($cache_key)){
@@ -237,7 +237,7 @@ class ConversionController extends BaseController
     */
     public function getNeoGntSymbol($address){
         $return = null;
-        $address = ltrim($address, '0x'); // 合约地址,
+        $address = str_replace('0x', '', $address); // 合约地址,
         $cache_key = 'KEY:NEO_GNT:SYMBOL:'.$address;
         try {
             if(\Redis::exists($cache_key)){
