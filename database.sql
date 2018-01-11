@@ -297,3 +297,5 @@ CREATE TABLE public.configs (
 
 ALTER TABLE public.market_notifications ADD currency VARCHAR(100) NULL;
 COMMENT ON COLUMN public.market_notifications.currency IS '币种';
+
+ALTER TABLE public.wallets ADD address_hash160 VARCHAR(100) NULL;

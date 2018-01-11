@@ -42,11 +42,15 @@ $router->group(['namespace' => 'Api'], function ($router) {
 			$router->any('address', 'ExtendController@address');
 			$router->any('getNeoUtxo', 'ExtendController@getNeoUtxo');
 			$router->any('getNeoClaimUtxo', 'ExtendController@getNeoClaimUtxo');
-			$router->any('getNeoOrderStatus', 'ExtendController@getNeoOrderStatus');
+            $router->any('getNeoOrderStatus', 'ExtendController@getNeoOrderStatus');
+
+            $router->any('getIcoGasCost', 'ExtendController@getIcoGasCost');
+            $router->any('getNeoGasCost', 'ExtendController@getNeoGasCost');
+            $router->any('getNeoGntInfo', 'ConversionController@getNeoGntInfo');
 		});
 		$router->resource('message', 'MessageController');
 		$router->resource('conversion', 'ConversionController');
-//		$router->resource('sts', 'StsController');
+		// $router->resource('sts', 'StsController');
 		$router->resource('user-wallet', 'UserWalletCategoryController');
 		$router->resource('gnt-category', 'GntCategoryController');
 		$router->resource('user-gnt', 'UserGntCategoryController');

@@ -630,11 +630,12 @@ if (!function_exists('sendCurl')) {
 		curl_close($ch);
 		if ($httpCode != 200) {
 			$msg = $err ? $err : $httpCode . '请求第三方服务器失败';
-			if($result && $result['message']){
+			if($result && !empty($result['message'])){
 				$msg = $result['message'];
 			}
-			\Illuminate\Support\Facades\Log::info($msg);
-			throw new \Exception($msg);
+            $msg = $msg ?: $res;
+			\Illuminate\Support\Facades\Log::info($url.'---'.$msg);
+			throw new \Exception($url .'---'. $msg);
 		}
 		return $result || $res == '[]' ? $result : $res;
 	}
@@ -693,4 +694,24 @@ if (!function_exists('updateOrderStatus')) {
 //			$v->update(['status' => 3]);
 //		});
 	}
+}
+
+if (!function_exists('Hex2String')) {
+    function Hex2String($hex){
+        $string='';
+        for ($i=0; $i < strlen($hex)-1; $i+=2){
+            $string .= chr(hexdec($hex[$i].$hex[$i+1]));
+        }
+        return $string;
+    }
+}
+
+if (!function_exists('String2Hex')) {
+    function String2Hex($string){
+        $hex='';
+        for ($i=0; $i < strlen($string); $i++){
+            $hex .= dechex(ord($string[$i]));
+        }
+        return $hex;
+    }
 }

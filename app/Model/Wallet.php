@@ -21,6 +21,7 @@ class Wallet extends Model
 		"category_id",
 		"name",
 		"address",
+        "address_hash160"
 	];
 
 	/**

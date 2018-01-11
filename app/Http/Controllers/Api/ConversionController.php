@@ -49,6 +49,7 @@ class ConversionController extends BaseController
 	{
 		// $record = Wallet::with('gnt.gntCategory.icoInfo')->findOrFail($walletId);
 		$record = Wallet::with('gnt.gntCategory.icoInfo')->ofUserId($this->user->id)->findOrFail($walletId);
+
 		//测算价值
 		switch(strtolower($record->category->name)){
 			case 'eth':
@@ -67,11 +68,26 @@ class ConversionController extends BaseController
 				})->sortByDesc('updated_at')->values()->all();
 			break;
 			case 'neo':
-				// neo 钱包没有代币,默认为gas
-				unset($record->gnt);
 				// neo 余额
 				$record->balance = $this->getWalletBalance('neo', $record->address);
 				$record->cap = \PriceCoinmarketcap::getPrice('neo') ?: null;
+                $list = $record->gnt->each(function ($val) use ($record) {
+                    if(! $address_hash160 = $record->address_hash160){
+                        \Log::info('NEO 钱包ID:'.$record->id.',address_hash160 为空!');
+                        $val->balance = 0;
+                    }else{
+                        $val->balance = $this->getNeoGntBalance($val->gntCategory->address, $address_hash160);
+                    }
+
+                    // 获取代币通用信息
+                    $val->decimals = $this->getNeoGntDecimals($val->gntCategory->address);
+                    $val->symbol   = $this->getNeoGntSymbol($val->gntCategory->address);
+
+					if(! $ico_name = !empty($val->gntCategory->icoInfo) ? $val->gntCategory->icoInfo->name : null){
+                        \Log::info('获取'.$val->gntCategory->name.'的API名称失败,请检查ico_list表中是否存在!');
+					}
+					$val->gntCategory->cap = \PriceCoinmarketcap::getPrice($ico_name) ?: null;
+				})->sortByDesc('updated_at')->values()->all();
 			case 'gas':
 				$uri = env('TRADER_URL_NEO',config('user_config.unichain_url')) . '/extend';
 				$param = [
@@ -82,7 +98,7 @@ class ConversionController extends BaseController
 					'id' => 0
 				];
 				$res = sendCurl($uri, $param, null, 'POST');
-				// neo 默认代币 gas 
+				// neo 默认代币 gas
 				$gnt = [
 					'name' => 'gas',
 					'unavailable' => $res['result']['Unavailable'] ?: 0,
@@ -90,6 +106,8 @@ class ConversionController extends BaseController
 					'balance' => $this->getWalletBalance('neo', $record->address, \Request::header('neo-gas-asset-id')),
 					'cap' => \PriceCoinmarketcap::getPrice('gas') ?: null
 				];
+                // neo 钱包没有代币,默认为gas
+                unset($record->gnt);
 				$record->gnt = [collect($gnt)];
 			break;
 		}
@@ -129,4 +147,122 @@ class ConversionController extends BaseController
 		}
 		return $return;
 	}
+
+    /**
+    * 获取neo代币余额信息
+    * @param string $c_address 合约地址
+    * @param string $w_address 钱包地址
+    * @return array
+    */
+    public function getNeoGntBalance($c_address, $w_address){
+        $return = 0;
+
+        $uri = env('TRADER_URL_NEO',config('user_config.unichain_url'));
+        $param = [
+            'jsonrpc' => "2.0",
+            'method' => "invokefunction",
+            'params' => [
+                ltrim($c_address, '0x'), // 合约地址
+                'balanceOf',
+                [
+                    [
+                        'type' => 'Hash160',
+                        'value' => $w_address
+                    ]
+                ]
+            ],
+            'id' =>3
+        ];
+        try {
+            $res = sendCurl($uri, $param, null, 'POST');
+            $return = $res['result']['stack'][0]['value'] ?: 0;
+        } catch (\Exception $e) {
+            \Log::info('获取neo代币余额失败!合约地址:'.$c_address.',钱包地址:'.$w_address);
+            // throw new \Exception();
+            $return = 0;
+        }
+        return $return;
+    }
+
+    // 单独获取NEO通用信息
+    public function getNeoGntInfo(Request $request){
+        $this->validate($request, [
+			'address' => 'required'
+		]);
+        $address = $request->get('address');
+        $return = [];
+        $return['decimals'] = $this->getNeoGntDecimals($address);
+        $return['symbol'] = $this->getNeoGntSymbol($address);
+        return success($return);
+    }
+    /**
+    * 缓存neo代币小数位数
+    * @param string $address 合约地址
+    */
+    public function getNeoGntDecimals($address){
+        $return = null;
+        $address = ltrim($address, '0x'); // 合约地址,
+        $cache_key = 'KEY:NEO_GNT:DECIMALS:'.$address;
+        try {
+            if(\Redis::exists($cache_key)){
+                return \Redis::get($cache_key);
+            }
+            $uri = env('TRADER_URL_NEO',config('user_config.unichain_url'));
+            $param = [
+                'jsonrpc' => '2.0',
+                'method' => 'invokefunction',
+                'params' => [
+                    $address,
+                    'decimals',
+                    []
+                ],
+                'id' => 2
+            ];
+            $res = sendCurl($uri, $param, null, 'POST');
+            if(! $return = $res['result']['stack'][0]['value']){
+                throw new \Exception("获取neo代币小数位数失败!".$address);
+            }
+            // 写入到redis缓存
+            \Redis::set($cache_key, $return);
+        } catch (\Exception $e) {
+            \Log::info('获取neo代币小数位数失败!'.$address);
+        }
+        return $return;
+    }
+
+    /**
+    * 缓存neo代币符号
+    * @param string $address 合约地址
+    */
+    public function getNeoGntSymbol($address){
+        $return = null;
+        $address = ltrim($address, '0x'); // 合约地址,
+        $cache_key = 'KEY:NEO_GNT:SYMBOL:'.$address;
+        try {
+            if(\Redis::exists($cache_key)){
+                return \Redis::get($cache_key);
+            }
+            $uri = env('TRADER_URL_NEO',config('user_config.unichain_url'));
+            $param = [
+                'jsonrpc' => '2.0',
+                'method' => 'invokefunction',
+                'params' => [
+                    $address,
+                    'symbol',
+                    []
+                ],
+                'id' => 1
+            ];
+            $res = sendCurl($uri, $param, null, 'POST');
+            if(! $return = $res['result']['stack'][0]['value']){
+                throw new \Exception("获取neo代币符号失败!".$address);
+            }
+            $return = Hex2String($return);
+            // 写入到redis缓存
+            \Redis::set($cache_key, $return);
+        } catch (\Exception $e) {
+            \Log::info('获取neo代币符号失败!'.$address);
+        }
+        return $return;
+    }
 }

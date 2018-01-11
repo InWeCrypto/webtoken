@@ -274,6 +274,89 @@ class ExtendController extends BaseController
 		$uri = env('TRADER_WALLET_URL_NEO', config('user_config.api_url')) . '/order/'. $request->get('trade_no');
 		return success(sendCurl($uri));
 	}
+    // 获取neo转账所需的gas费用
+    public function getNeoGasCost(Request $request)
+    {
+        $this->validate($request, [
+            'treaty_address' => 'required',
+            'from_address' => 'required',
+            'to_address' => 'required',
+            'amount' => 'required'
+        ]);
+
+        $treaty_address = $request->get('treaty_address');
+        $from_address = $request->get('from_address');
+        $to_address = $request->get('to_address');
+        $amount = $request->get('amount');
+
+
+        $uri = env('TRADER_URL_NEO',config('user_config.unichain_url'));
+        $param = [
+            'jsonrpc' => "2.0",
+            'method' => "invokefunction",
+            'params' => [
+                $treaty_address, // 合约地址
+                'transfer',
+                [
+                    [
+                        'type' => 'Hash160',
+                        'value' => $from_address
+                    ],
+                    [
+                        'type' => 'Hash160',
+                        'value' => $to_address
+                    ],
+                    [
+                        'type' => 'Integer',
+                        'value' => $amount
+                    ],
+                ]
+            ],
+            'id' =>3
+        ];
+        try {
+            $res = sendCurl($uri, $param, null, 'POST');
+
+        } catch (\Exception $e) {
+            \Log::info('获取转账GAS费用失败!'. json_encode($request->all()));
+
+            return fail('获取转账GAS费用失败!');
+        }
+
+        return isset($res['result']['gas_consumed']) ? success(['gas_consumed'=>$res['result']['gas_consumed']]) : fail('获取转账GAS费用失败!');
+    }
+
+    // 获取ico gas费用
+    public function getIcoGasCost(Request $request){
+        $this->validate($request, [
+            'treaty_address' => 'required',
+        ]);
+
+        $treaty_address = $request->get('treaty_address');
+
+
+        $uri = env('TRADER_URL_NEO',config('user_config.unichain_url'));
+        $param = [
+            'jsonrpc' => "2.0",
+            'method' => "invokefunction",
+            'params' => [
+                $treaty_address, // 合约地址
+                'mintTokens',
+                [
+                ]
+            ],
+            'id' =>3
+        ];
+        try {
+            $res = sendCurl($uri, $param, null, 'POST');
+        } catch (\Exception $e) {
+            \Log::info('获取ICO GAS费用失败!'. json_encode($request->all()));
+
+            return fail('获取ICO GAS费用失败!');
+        }
+
+        return isset($res['result']['gas_consumed']) ? success(['gas_consumed'=>$res['result']['gas_consumed']]) : fail('获取转账GAS费用失败!');
+    }
 
 
 	/**
