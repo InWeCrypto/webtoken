@@ -224,6 +224,7 @@ class ConversionController extends BaseController
             }
             // 写入到redis缓存
             \Redis::set($cache_key, $return);
+            \Redis::expire($cache_key, 60 * 5 ); // 5分钟
         } catch (\Exception $e) {
             \Log::info('获取neo代币小数位数失败!'.$address);
         }
@@ -260,6 +261,7 @@ class ConversionController extends BaseController
             $return = Hex2String($return);
             // 写入到redis缓存
             \Redis::set($cache_key, $return);
+            \Redis::expire($cache_key, 60 * 5 ); // 5分钟
         } catch (\Exception $e) {
             \Log::info('获取neo代币符号失败!'.$address);
         }
