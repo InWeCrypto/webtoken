@@ -162,7 +162,7 @@ class ConversionController extends BaseController
             'jsonrpc' => "2.0",
             'method' => "invokefunction",
             'params' => [
-                str_replace('0x', '', $address), // 合约地址,
+                str_replace('0x', '', $c_address), // 合约地址,
                 'balanceOf',
                 [
                     [
