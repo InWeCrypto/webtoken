@@ -187,12 +187,15 @@ class ConversionController extends BaseController
     // 单独获取NEO通用信息
     public function getNeoGntInfo(Request $request){
         $this->validate($request, [
-			'address' => 'required'
+			'address' => 'required',
+            'wallet' => 'required',
 		]);
         $address = $request->get('address');
+        $wallet = $request->get('wallet');
         $return = [];
         $return['decimals'] = $this->getNeoGntDecimals($address);
         $return['symbol'] = $this->getNeoGntSymbol($address);
+        $return['balance'] = $this->getNeoGntBalance($address, $wallet);
         return success($return);
     }
     /**
