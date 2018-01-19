@@ -69,7 +69,7 @@ class UserGntCategoryController extends BaseController
 					if (!$category = GntCategory::find($categoryId)) {
 						throw new \Exception('非法代币类型');
 					}
-					$category->userGnt()->create(['user_id' => $this->user->id, 'name' => $category->name, 'wallet_id' => $walletId]);
+					$category->userGnt()->firstOrCreate(['user_id' => $this->user->id, 'name' => $category->name, 'wallet_id' => $walletId]);
 				}
 			});
 			return success();
