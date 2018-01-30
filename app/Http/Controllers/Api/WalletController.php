@@ -116,7 +116,7 @@ class WalletController extends BaseController
 					throw new \Exception('不是有效的eth钱包地址!');
 				}
 				// 钱包消息推送
-				$wallet_message_url = env('TRADER_WALLET_URL_NEO'). '/wallet/' . $this->user->open_id . '/' . $address;
+				$wallet_message_url = env('TRADER_WALLET_URL_ETH'). '/wallet/' . $this->user->open_id . '/' . $address;
 				sendCurl($wallet_message_url, [], null, 'POST');
 				break;
 			case 'neo':
